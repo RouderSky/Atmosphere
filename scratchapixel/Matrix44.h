@@ -3,6 +3,7 @@
 
 #include <cstdlib> 
 #include <cstdio> 
+//#include <cstdint>
 #include <iostream> 
 #include <iomanip> 
 
@@ -194,7 +195,7 @@ public:
 	}
 
 	//左乘，vector和matrix相乘
-	void multDirMatrix(const Vec3<T> &src, Vec<T> &dst) const
+	void multDirMatrix(const Vec3<T> &src, Vec3<T> &dst) const
 	{
 		dst.x = src.x*m[0][0] + src.y*m[1][0] + src.z*m[2][0];
 		dst.y = src.x*m[0][1] + src.y*m[1][1] + src.z*m[2][1];

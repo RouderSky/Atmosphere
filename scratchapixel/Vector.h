@@ -3,6 +3,7 @@
 
 #include <cstdlib> 
 #include <cstdio> 
+//#include <cstdint>
 #include <iostream> 
 #include <iomanip> 
 
@@ -80,7 +81,6 @@ public:
 		return *this;								//这个return多此一举，因为如果外部可以调用这个函数，证明了外面已经拿到了这个向量的本体了，返回完全是多余
 	}
 
-	//友元函数是怎么回事来着？？？
 	friend std::ostream& operator << (std::ostream &s, const Vec3<T> &v)
 	{
 		return s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
@@ -90,6 +90,8 @@ public:
 
 typedef Vec3<float> Vec3f;
 typedef Vec3<int> Vec3i;
+
+//----------------------------以下代码用到的机会不多
 
 //球面坐标到笛卡尔坐标
 template<typename T>
