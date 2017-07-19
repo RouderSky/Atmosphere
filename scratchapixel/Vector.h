@@ -3,7 +3,6 @@
 
 #include <cstdlib> 
 #include <cstdio> 
-//#include <cstdint>
 #include <iostream> 
 #include <iomanip> 
 
@@ -65,7 +64,7 @@ public:
 	{
 		return (&x)[i];		//还有这种操作的？？？x，y，z一定是连续空间的吗？？？？
 	}
-	T& operator [] (uint8_t i) const
+	T& operator [] (uint8_t i)
 	{
 		return (&x)[i];		//还有这种操作的？？？x，y，z一定是连续空间的吗？？？？
 	}

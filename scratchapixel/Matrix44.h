@@ -16,31 +16,31 @@ public:
 
 	Matrix44(){}
 
-	Matrix44(T a, T b, T c, T d, T e, T f, T g, T h, T i, T j, T k, T l, T m, T n, T o, T p)
+	Matrix44(T e0, T e1, T e2, T e3, T e4, T e5, T e6, T e7, T e8, T e9, T e10, T e11, T e12, T e13, T e14, T e15)
 	{
-		m[0][0] = a;
-		m[0][1] = b;
-		m[0][2] = c;
-		m[0][3] = d;
-		m[1][0] = e;
-		m[1][1] = f;
-		m[1][2] = g;
-		m[1][3] = h;
-		m[2][0] = i;
-		m[2][1] = j;
-		m[2][2] = k;
-		m[2][3] = l;
-		m[3][0] = m;
-		m[3][1] = n;
-		m[3][2] = o;
-		m[3][3] = p;
+		m[0][0] = e0;
+		m[0][1] = e1;
+		m[0][2] = e2;
+		m[0][3] = e3;
+		m[1][0] = e4;
+		m[1][1] = e5;
+		m[1][2] = e6;
+		m[1][3] = e7;
+		m[2][0] = e8;
+		m[2][1] = e9;
+		m[2][2] = e10;
+		m[2][3] = e11;
+		m[3][0] = e12;
+		m[3][1] = e13;
+		m[3][2] = e14;
+		m[3][3] = e15;
 	}
 
 	//重载访问操作符
 	//注意：即使函数的参数列表相同，返回值加上const也算是一种重载
 	//uint8_t是什么数据类型？？？？？？？？？？？？？？
 	const T* operator [] (uint8_t i) const{ return m[i]; }		//传出的数组不可改变,这个版本有实际意义吗？？？
-	T* operator [] (uint8_t i) const{ return m[i]; }			//传出的数组可以改变
+	T* operator [] (uint8_t i){ return m[i]; }			//传出的数组可以改变
 
 	//这个函数就奇怪了，为什么Matrix44不用声明类型T了？？？？？
 	Matrix44 operator * (const Matrix44& v) const
@@ -66,9 +66,9 @@ public:
 		//这个写法和上面的功能是一样的
 		//__restrict是什么东西？？？
 		//性能比较好，但是看不懂写的是什么.........
-		const T * __restrict ap = &a.x[0][0];
-		const T * __restrict bp = &b.x[0][0];
-		T * __restrict cp = &c.x[0][0];
+		const T * __restrict ap = &a.m[0][0];
+		const T * __restrict bp = &b.m[0][0];
+		T * __restrict cp = &c.m[0][0];
 
 		T a0, a1, a2, a3;
 
@@ -293,7 +293,7 @@ public:
 		return *this;
 	}
 
-	friend std::ostream& operator << (std::ostream &s, const Matrix44 &)
+	friend std::ostream& operator << (std::ostream &s, const Matrix44 &m)
 	{
 		//格式设置
 		std::ios_base::fmtflags oldFlags = s.flags();
