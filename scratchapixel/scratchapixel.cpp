@@ -1,8 +1,16 @@
-ï»¿#include "Vector.h"
+// scratchapixel.cpp : ¶¨Òå¿ØÖÆÌ¨Ó¦ÓÃ³ÌĞòµÄÈë¿Úµã¡£
+//
+
+#include "stdafx.h"
+
+#include "Vector.h"
 #include "Matrix44.h"
+#include "Interpolation.h"
+
 
 int main()
 {
+#if 0
 	Vec3f v(0, 1, 2);
 	std::cerr << v << std::endl;
 	Matrix44f a, b, c;
@@ -12,8 +20,12 @@ int main()
 	std::cerr << d << std::endl;
 	d.inverse();
 	std::cerr << d << std::endl;
+#endif
+
+	testBilinearInterpolation();
 
 
 	system("pause");
 	return 0;
 }
+

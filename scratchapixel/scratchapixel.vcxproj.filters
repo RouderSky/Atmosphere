@@ -15,24 +15,36 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Matrix44.h">
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Vector.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="temp.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Color3.h">
+    <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Interpolation.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Matrix44.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="temp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Color3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="scratchapixel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
