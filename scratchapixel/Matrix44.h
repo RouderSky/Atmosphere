@@ -202,7 +202,7 @@ public:
 		dst.z = src.x*m[0][2] + src.y*m[1][2] + src.z*m[2][2];
 	}
 
-	//矩阵的转置
+	//矩阵的转置，先不管矩阵的逆是怎么实现的，估计也用不到
 	Matrix44 inverse()
 	{
 		int i, j, k;

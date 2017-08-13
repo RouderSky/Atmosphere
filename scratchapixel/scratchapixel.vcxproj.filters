@@ -21,6 +21,15 @@
     <ClInclude Include="Vector.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="temp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Color3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Interpolation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
