@@ -109,7 +109,7 @@ void testBilinearInterpolation()
 			pixel++;
 		}
 	}
-	saveToPPM("./inputbilinear1.ppm", imageData, imageWidth, imageWidth);
+	saveToPPM("./origin.ppm", imageData, imageWidth, imageWidth);
 
 	delete[] imageData;
 }
