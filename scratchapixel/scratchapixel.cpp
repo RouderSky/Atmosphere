@@ -7,7 +7,6 @@
 #include "Matrix44.h"
 #include "Interpolation.h"
 
-
 int main()
 {
 #if 0

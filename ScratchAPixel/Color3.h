@@ -21,11 +21,11 @@ public:
 	}
 	Color3 operator + (const Color3 &c) const
 	{
-		return Color3(r + c.r, g + c.g, b + c.g);
+		return Color3(r + c.r, g + c.g, b + c.b);
 	}
 	friend std::ostream & operator << (std::ostream &os, const Color3 &c)
 	{
-		os << c.r << " " << c.g << " " << c.g;
+		os << c.r << " " << c.g << " " << c.b;
 		return os;
 	}
 
@@ -47,7 +47,7 @@ void saveToPPM(const char *fn, const Color3f *c, const int &width, const int &he
 
 	if (ofs.fail())
 	{
-		fprintf(stderr, "ERROR: cant;t save image to file %s\n", fn);	//stderr是什么文件？
+		fprintf(stderr, "ERROR: can't save image to file %s\n", fn);	//stderr是什么文件？
 	}
 	else
 	{
@@ -68,7 +68,6 @@ void saveToPPM(const char *fn, const Color3f *c, const int &width, const int &he
 
 	ofs.close();
 }
-
 
 
 #endif

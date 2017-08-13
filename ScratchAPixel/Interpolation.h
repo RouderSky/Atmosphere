@@ -39,8 +39,9 @@ T bilinear(
 #endif
 }
 
+
 //testCode
-#ifdef WIN32		//我的是windows平台，为什么不识别？？？？？？？？
+#ifdef WIN32
 #define RANDFLOAT float(rand())/RAND_MAX
 #else
 #define RANDFLOAT drand48()
@@ -85,10 +86,32 @@ void testBilinearInterpolation()
 			*(pixel++) = bilinear(gx - gxi, 1 - (gy - gyi), c00, c10, c01, c11);
 		}
 	}
-
 	//输出到PPM文件
-	saveToPPM(".\bilinear.ppm", imageData, imageWidth, imageHeight);
+	saveToPPM("./bilinear.ppm", imageData, imageWidth, imageHeight);
 
+
+	//不进行双线性插值的图像
+	pixel = imageData;
+	int cellsize = imageWidth / (gridSizeX);
+	fprintf(stderr, "%d\n", cellsize);
+	for (int j = 0; j < imageWidth; ++j) {
+		for (int i = 0; i < imageWidth; ++i) {
+			float gx = (i + cellsize / 2) / float(imageWidth);
+			float gy = (j + cellsize / 2) / float(imageWidth);
+			int gxi = static_cast<int>(gx * gridSizeX);
+			int gyi = static_cast<int>(gy * gridSizeY);
+			*pixel = vertexData[gyi * (gridSizeX + 1) + gxi];
+			int mx = (i + cellsize / 2) % cellsize;
+			int my = (j + cellsize / 2) % cellsize;
+			int ma = cellsize / 2 + 2, mb = cellsize / 2 - 2;
+			if (mx < ma && mx > mb && my < ma && my > mb)
+				*pixel = Color3f(0, 0, 0);
+			pixel++;
+		}
+	}
+	saveToPPM("./inputbilinear1.ppm", imageData, imageWidth, imageWidth);
+
+	delete[] imageData;
 }
 
 
