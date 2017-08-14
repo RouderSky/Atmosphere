@@ -53,7 +53,7 @@ void testBilinearInterpolation()
 	//x，y轴上的格子个数
 	int gridSizeX = 9, gridSizeY = 9;			
 	//格子的顶点数据
-	Color3f *vertexData = new Color3f[(gridSizeX + 1)*(gridSizeY + 1)];		
+	Color3f *vertexData = new Color3f[(gridSizeX + 1)*(gridSizeY + 1)];		//这个数组的原本命名是grid2d，不知道意义是什么
 	//给格子的顶点赋值
 	for (int i = 0; i < gridSizeX + 1; ++i)
 	{
@@ -64,22 +64,48 @@ void testBilinearInterpolation()
 		}
 	}
 
-	//开始插值出图像
 	int imageWidth = 512;
 	int imageHeight = 512;
-	Color3f *imageData = new Color3f[imageWidth*imageHeight];	//图像的像素数据
-	Color3f *pixel = imageData;
+	Color3f *imageData = new Color3f[imageWidth*imageHeight];	//存储图像的像素数据
+	Color3f *pixel = NULL;
+
+	//不进行双线性插值的图像，进行四舍五入获取顶点数据
+	pixel = imageData;
+	int cellSizeX = imageWidth / gridSizeX;
+	int cellSizeY = imageHeight / gridSizeY;
+	fprintf(stderr, "%d %d\n", cellSizeX, cellSizeY);
+	for (int i = 0; i < imageWidth; ++i)
+	{
+		for (int j = 0; j < imageHeight; ++j)
+		{
+			float gx = j / (float)imageWidth * gridSizeX;
+			float gy = i / (float)imageHeight * gridSizeY;
+			int gxi = (int)(gx + 0.5);		//四舍五入
+			int gyi = (int)(gy + 0.5);
+			*pixel = vertexData[gyi*(gridSizeX + 1) + gxi];		//直接设置像素颜色
+			//在每一个格子顶点画上一个黑点
+			int mx = (j + 1) % cellSizeX;
+			int my = (i + 1) % cellSizeY;
+			if(mx>=0&&mx<=2&&my>=0&&my<=2)
+				*pixel = Color3f(0, 0, 0);
+			++pixel;
+		}
+	}
+	saveToPPM("./origin.ppm", imageData, imageWidth, imageHeight);
+
+	//开始插值出图像
+	pixel = imageData;
 	for (int i = 0; i < imageWidth; ++i)
 	{
 		for (int j = 0; j < imageHeight; ++j)
 		{
 			//确定该像素所属格子
-			float gx = i / (float)imageWidth * gridSizeX;
-			float gy = j / (float)imageHeight * gridSizeY;
+			float gx = j / (float)imageWidth * gridSizeX;
+			float gy = i / (float)imageHeight * gridSizeY;
 			int gxi = (int)gx;
 			int gyi = (int)gy;
 			//获取格子四个顶点的数据
-			const Color3f & c00 = vertexData[(gyi + 1)*(gridSizeX+1)+gxi];
+			const Color3f & c00 = vertexData[(gyi + 1)*(gridSizeX + 1)+gxi];
 			const Color3f & c10 = vertexData[(gyi + 1)*(gridSizeX + 1) + (gxi+1)];
 			const Color3f & c01 = vertexData[gyi*(gridSizeX + 1) + gxi];
 			const Color3f & c11 = vertexData[gyi*(gridSizeX + 1) + (gxi+1)];
@@ -89,27 +115,6 @@ void testBilinearInterpolation()
 	//输出到PPM文件
 	saveToPPM("./bilinear.ppm", imageData, imageWidth, imageHeight);
 
-
-	//不进行双线性插值的图像
-	pixel = imageData;
-	int cellsize = imageWidth / (gridSizeX);
-	fprintf(stderr, "%d\n", cellsize);
-	for (int j = 0; j < imageWidth; ++j) {
-		for (int i = 0; i < imageWidth; ++i) {
-			float gx = (i + cellsize / 2) / float(imageWidth);
-			float gy = (j + cellsize / 2) / float(imageWidth);
-			int gxi = static_cast<int>(gx * gridSizeX);
-			int gyi = static_cast<int>(gy * gridSizeY);
-			*pixel = vertexData[gyi * (gridSizeX + 1) + gxi];
-			int mx = (i + cellsize / 2) % cellsize;
-			int my = (j + cellsize / 2) % cellsize;
-			int ma = cellsize / 2 + 2, mb = cellsize / 2 - 2;
-			if (mx < ma && mx > mb && my < ma && my > mb)
-				*pixel = Color3f(0, 0, 0);
-			pixel++;
-		}
-	}
-	saveToPPM("./origin.ppm", imageData, imageWidth, imageWidth);
 
 	delete[] imageData;
 }
