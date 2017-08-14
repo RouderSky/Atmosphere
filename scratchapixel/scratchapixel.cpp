@@ -21,8 +21,8 @@ int main()
 	std::cerr << d << std::endl;
 #endif
 
-	testBilinearInterpolation();
-
+//	testBilinearInterpolation();
+	testTrilinearInterpoplation();
 
 	system("pause");
 	return 0;

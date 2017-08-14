@@ -9,11 +9,11 @@
 #include <cstdlib>
 #include "Color3.h"
 
+//使用线性插值函数前先画个图搞清楚坐标体系
+
 //Bilinear interpolation 
-//tx=x/|c10-c00|
-//ty=y/|c01-c00|
-//ps：x是需要插值的点到c00的水平距离
-//	  y是需要插值的点到c00的垂直距离
+//这里使用的坐标系：x轴正方向向右，y轴正方向向上；
+//tx,ty只是坐标比例，范围是[0,1]
 template<typename T>
 T bilinear(
 	const float &tx,
@@ -36,6 +36,43 @@ T bilinear(
 		tx*(1 - ty)*c10 +
 		(1 - tx)*ty*c01 +
 		tx*ty*c11;
+#endif
+}
+
+//Trilinear interpolation
+//这里使用的坐标系：x轴向右，y轴向上，z轴向前，是一个左手坐标系；
+//tx,ty,tz只是坐标比例，范围是[0,1]
+template<typename T>
+T trilinear(
+	const float &tx,
+	const float &ty,
+	const float &tz,
+	const T &c000,
+	const T &c100,
+	const T &c010,
+	const T &c110,
+	const T &c001,
+	const T &c101,
+	const T &c011,
+	const T &c111)
+{
+#if 0
+	//先对x、y轴方向进行双线性插值
+	T e = bilinear(tx, ty, c000, c100, c010, c110);
+	T f = bilinear(tx, ty, c001, c101, c011, c111);
+
+	//再将x、y轴方向插值的结果进行一次z方向上的插值
+	return (1 - tz)*e + tz*f;
+#else
+	//直接对八点的数据进行加权相加
+	return (1 - tx)*(1 - ty)*(1 - tz)*c000 +
+		         tx*(1 - ty)*(1 - tz)*c100 +
+		         (1 - tx)*ty*(1 - tz)*c010 +
+		               tx*ty*(1 - tz)*c110 +
+		         (1 - tx)*(1 - ty)*tz*c001 +
+		               tx*(1 - ty)*tz*c101 +
+		               (1 - tx)*ty*tz*c011 +
+		                     tx*ty*tz*c111;
 #endif
 }
 
@@ -117,6 +154,52 @@ void testBilinearInterpolation()
 
 
 	delete[] imageData;
+}
+
+
+#define IX(size,i,j,k)(i*size*size+j*size+k)
+void testTrilinearInterpoplation()
+{
+	//一个由10*10*10个3d小立方体组成的大立方体
+	int gridSize = 10;
+	int numVertices = gridSize + 1;
+	Color3f *vertexData = new Color3f[numVertices* numVertices* numVertices];	//网站上这里写的是grid3d
+	for (int i = 0; i < numVertices; ++i)
+	{
+		for (int j = 0; j < numVertices; ++j)
+		{
+			for (int k = 0; k < numVertices; ++k)
+			{
+				vertexData[IX(numVertices, i, j, k)] = Color3f(RANDFLOAT, RANDFLOAT, RANDFLOAT);
+			}
+		}
+	}
+
+	//插值出大立方体的所有数据
+	float px, py, pz;
+	float gx, gy, gz;
+	int gxi, gyi, gzi;
+	float tx, ty, tz;
+	for (int i = 0; i < 10e2; ++i)	//计算10*(10^2)次
+	{
+		px = RANDFLOAT;
+		py = RANDFLOAT;
+		pz = RANDFLOAT;
+		gx = px*gridSize; gxi = (int)gx; tx = gx - gxi;
+		gy = py*gridSize; gyi = (int)gy; ty = gy - gyi;
+		gz = pz*gridSize; gzi = (int)gz; tz = gz - gzi;
+		const Color3f & c000 = vertexData[IX(numVertices, gxi, gyi + 1, gzi)];
+		const Color3f & c010 = vertexData[IX(numVertices, gxi+1, gyi + 1, gzi)];
+		const Color3f & c100 = vertexData[IX(numVertices, gxi, gyi, gzi)];
+		const Color3f & c110 = vertexData[IX(numVertices, gxi+1, gyi, gzi)];
+		const Color3f & c001 = vertexData[IX(numVertices, gxi, gyi + 1, gzi+1)];
+		const Color3f & c101 = vertexData[IX(numVertices, gxi+1, gyi + 1, gzi+1)];
+		const Color3f & c011 = vertexData[IX(numVertices, gxi, gyi + 1, gzi+1)];
+		const Color3f & c111 = vertexData[IX(numVertices, gxi+1, gyi, gzi+1)];
+		trilinear(tx, 1 - ty, tz, c000, c100, c010, c110, c001, c101, c010, c111);
+	}
+
+	delete[] vertexData;
 }
 
 
