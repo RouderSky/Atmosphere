@@ -1,4 +1,6 @@
-﻿#include <cstdlib>
+﻿#if 1
+
+#include <cstdlib>
 #include <cstdio>
 #include <cmath>
 #include <fstream>
@@ -82,9 +84,10 @@ public:
 		float d2 = l.length2() - projectOflToRaydir*projectOflToRaydir;
 		if (d2 > radius2)
 			return false;
-		float offset = sqrt(radius - d2);
+		float offset = sqrt(radius2 - d2);
 		t0 = projectOflToRaydir - offset;
 		t1 = projectOflToRaydir + offset;
+		return true;
 	}
 };
 
@@ -96,6 +99,7 @@ float mix(const float &a, const float &b, const float &mix)
 	return b*mix + a*(1 - mix);
 }
 
+//有问题。。。。。。。。。。。。。。。。。
 //raydir一定要是单位向量
 Vec3f trace(
 	const Vec3f &rayorig,
@@ -110,7 +114,7 @@ Vec3f trace(
 		float t0 = INFINITY, t1 = INFINITY;
 		if (spheres[i].intersect(rayorig, raydir, t0, t1))
 		{
-			int hitFaceDist = t0 < 0/*rayorig在物体内部*/ ? t1 : t0;
+			float hitFaceDist = t0 < 0/*rayorig在物体内部*/ ? t1 : t0;
 			if (hitFaceDist < minHitDist)
 			{
 				minHitDist = hitFaceDist;
@@ -128,7 +132,7 @@ Vec3f trace(
 	Vec3f nhit = phit - nearSphere->center;			//ray击中点的球体外法线
 	nhit.normalize();
 	bool inside = false;	//ray的发射点是不是在内部
-	if (raydir.dot(nhit))
+	if (raydir.dot(nhit) > 0)
 	{
 		nhit = -nhit;
 		inside = true;
@@ -199,63 +203,24 @@ Vec3f trace(
 	return surfaceColor + nearSphere->emissionColor;
 }
 
-//void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,const unsigned &pixelNumOfHeight,const float &fov)
-//{
-//	//存储像素颜色，最后输入到PPM文件，所以这个数组和PPM文件是一个映射关系
-//	Vec3f *image = new Vec3f[pixelNumOfWidth*pixelNumOfHeight];
-//	Vec3f *pixel = image;
-//
-//	//确定每一个像素的位置，然后确定primary ray的方向
-//	//这里我们假定cavas这个平面位于z=-1这个平面上
-//	float aspectratio = pixelNumOfWidth / (float)pixelNumOfHeight;
-//	float width = 2 * tan(fov / 2 * M_PI / 180);		//canvas宽度
-//	float height = width / aspectratio;					//canvas高度
-//	float widthOfPixel = width / pixelNumOfWidth;		//canvas上的像素宽度
-//	float heightOfPixel = height / pixelNumOfHeight;	//canvas上的像素高度
-//	//
-//	float x0 = -(width / 2) + (widthOfPixel / 2);
-//	float y0 = (height / 2) - (heightOfPixel / 2);
-//	//确定每个像素的颜色，这个循环可以并行计算
-//	//注意：PPM文件必须按照从上到下、从左到右的顺序输入一幅图像的信息
-//	for (int i = 0; i < pixelNumOfHeight; ++i)			//行
-//	{
-//		for (int j = 0; j < pixelNumOfWidth; ++j)		//列
-//		{
-//			float pixelX = x0 + j*widthOfPixel;
-//			float pixelY = y0 - i*heightOfPixel;
-//			Vec3f primaryRayDir(pixelX, pixelY, -1);
-//			primaryRayDir.normalize();
-//			(*pixel++) = trace(Vec3f(0), primaryRayDir, spheres, 0);	//第一个参数可以是像素点的位置
-//		}
-//	}
-//
-//	//输出到PPM文件
-//	std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
-//	ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight << "\n255\n";
-//	for (unsigned i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
-//	{
-//		ofs << (unsigned char)(std::min((float)1, image[i].x) * 255)
-//			<< (unsigned char)(std::min((float)1, image[i].y) * 255)
-//			<< (unsigned char)(std::min((float)1, image[i].z) * 255);	//不做四舍五入了？？？
-//	}
-//	ofs.close();
-//	delete[] image;
-//}
-
-void render(const std::vector<Sphere> &spheres, const unsigned &pixelNumOfWidth, const unsigned &pixelNumOfHeight, const float &fov)
+//fov是上下夹角
+void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,const unsigned &pixelNumOfHeight,const float &fov)
 {
 	//存储像素颜色，最后输入到PPM文件，所以这个数组和PPM文件是一个映射关系
 	Vec3f *image = new Vec3f[pixelNumOfWidth*pixelNumOfHeight];
 	Vec3f *pixel = image;
 
+	///////////////////////////////////////////////////////////////////////////////
+	//射线计算有问题。。。。。。。。。。。。。但是影响不大，迟点再做调整
+
 	//确定每一个像素的位置，然后确定primary ray的方向
 	//这里我们假定cavas这个平面位于z=-1这个平面上
 	float aspectratio = pixelNumOfWidth / (float)pixelNumOfHeight;
-	float width = 2 * tan(fov / 2 * M_PI / 180);		//canvas宽度
-	float height = width / aspectratio;					//canvas高度
+	float height = 2 * tan(fov / 2 * M_PI / 180);		//canvas宽度
+	float width = height * aspectratio;					//canvas高度
 	float widthOfPixel = width / pixelNumOfWidth;		//canvas上的像素宽度
 	float heightOfPixel = height / pixelNumOfHeight;	//canvas上的像素高度
-														//
+	//
 	float x0 = -(width / 2) + (widthOfPixel / 2);
 	float y0 = (height / 2) - (heightOfPixel / 2);
 	//确定每个像素的颜色，这个循环可以并行计算
@@ -271,6 +236,7 @@ void render(const std::vector<Sphere> &spheres, const unsigned &pixelNumOfWidth,
 			(*pixel++) = trace(Vec3f(0), primaryRayDir, spheres, 0);	//第一个参数可以是像素点的位置
 		}
 	}
+	///////////////////////////////////////////////////////////////////////////////
 
 	//输出到PPM文件
 	std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
@@ -292,12 +258,15 @@ int main()
 	//object
 	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), 0, 0, 0.0));
 	spheres.push_back(Sphere(Vec3f(0.0, 0, -20), 4, Vec3f(1.00, 0.32, 0.36), 1, 0.5));
+	spheres.push_back(Sphere(Vec3f(-3.5, 3.0, -30), 4, Vec3f(0.00, 1.00, 0.00), 0, 0));
 	spheres.push_back(Sphere(Vec3f(5.0, -1, -15), 2, Vec3f(0.90, 0.76, 0.46), 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(5.0, 0, -25), 3, Vec3f(0.65, 0.77, 0.97), 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(-5.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), 1, 0.0));
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
-	render(spheres, 640, 480, 30);
+	render(spheres, 1280, 720, 60);
 	//render(spheres);
 	return 0;
 }
+
+#endif
