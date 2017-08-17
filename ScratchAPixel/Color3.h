@@ -7,6 +7,7 @@
 template<typename T>
 class Color3
 {
+	//没有逐分量相乘方法
 public:
 	Color3(): r(0), g(0), b(0){}
 	Color3(T rr) : r(rr), g(rr), b(rr) {}

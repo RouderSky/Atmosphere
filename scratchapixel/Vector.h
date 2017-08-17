@@ -15,6 +15,17 @@ public:
 	Vec3() : x(T(0)), y(T(0)), z(T(0)){}
 	Vec3(const T &xx) : x(xx), y(xx), z(xx){}		//调用时即使参数类型与T不匹配也可以，访问xx会自动强转
 	Vec3(const T &xx, const T &yy, const T &zz) :x(xx), y(yy), z(zz){}
+
+	Vec3<T>& normalize()							//返回引用
+	{
+		T len = length();
+		if (len > 0)
+		{
+			T invLen = 1 / len;						//除法耗费的性能比乘法要大，所以先处理一下
+			x *= invLen, y *= invLen, z *= invLen;
+		}
+		return *this;								//这个return多此一举，因为如果外部可以调用这个函数，证明了外面已经拿到了这个向量的本体了，返回完全是多余
+	}
 	
 	Vec3<T> operator + (const Vec3<T> &v) const
 	{
@@ -26,10 +37,13 @@ public:
 		return Vec3<T>(x - v.x, y - v.y, z - v.z);
 	}
 
-	//这个写法仅支持向量乘系数，而不支持系数乘矩阵
 	Vec3<T> operator * (const T &r) const
 	{
 		return Vec3<T>(x * r, y * r, z * r);
+	}
+	friend Vec3<T> operator * (const T &r, const Vec3<T> &v)
+	{
+		return v*r;
 	}
 
 	//右边的const代表着该函数不会修改该对象中的任何成员变量，一旦在函数中不小心改了成员变量，编译无法通过，增加了函数安全性
@@ -48,7 +62,6 @@ public:
 			);
 	}
 
-	//这个函数名字是什么意思？？？
 	T norm() const
 	{
 		return x*x + y*y + z*z;
@@ -60,24 +73,13 @@ public:
 	}
 
 	//返回的是引用，而且提供了两个版本
-	const T& operator [] (uint8_t i) const	//这个版本有什么意义？？？下面都有一个版本是可以更改数据的了
+	const T& operator [] (uint8_t i) const
 	{
 		return (&x)[i];		//还有这种操作的？？？x，y，z一定是连续空间的吗？？？？
 	}
 	T& operator [] (uint8_t i)
 	{
 		return (&x)[i];		//还有这种操作的？？？x，y，z一定是连续空间的吗？？？？
-	}
-
-	Vec3<T>& normalize()							//返回引用
-	{
-		T len = length();
-		if (len > 0)
-		{
-			T invLen = 1 / len;						//除法耗费的性能比乘法要大，所以先处理一下
-			x *= invLen, y *= invLen, z *= invLen;	
-		}
-		return *this;								//这个return多此一举，因为如果外部可以调用这个函数，证明了外面已经拿到了这个向量的本体了，返回完全是多余
 	}
 
 	friend std::ostream& operator << (std::ostream &s, const Vec3<T> &v)
