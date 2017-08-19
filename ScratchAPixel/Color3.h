@@ -1,4 +1,4 @@
-#ifndef __COLOR3_H__
+ï»¿#ifndef __COLOR3_H__
 #define __COLOR3_H__
 
 #include <fstream>
@@ -7,7 +7,7 @@
 template<typename T>
 class Color3
 {
-	//Ã»ÓĞÖğ·ÖÁ¿Ïà³Ë·½·¨
+	//æ²¡æœ‰é€åˆ†é‡ç›¸ä¹˜æ–¹æ³•
 public:
 	Color3(): r(0), g(0), b(0){}
 	Color3(T rr) : r(rr), g(rr), b(rr) {}
@@ -16,7 +16,7 @@ public:
 	{
 		return Color3(r*v, g*v, b*v);
 	}
-	friend Color3 operator * (const T &v, const Color3 &c)		//scratchapixel½«TÖ±½ÓÉèÖÃÎªfloat£¬¹À¼ÆÊÇËüĞ´´íÁË
+	friend Color3 operator * (const T &v, const Color3 &c)		//scratchapixelå°†Tç›´æ¥è®¾ç½®ä¸ºfloatï¼Œä¼°è®¡æ˜¯å®ƒå†™é”™äº†
 	{
 		return c*v;
 	}
@@ -30,25 +30,25 @@ public:
 		return os;
 	}
 
-	T r, g, b;		//scratchapixel½«TÖ±½ÓÉèÖÃÎªfloat£¬¹À¼ÆÊÇËüĞ´´íÁË
+	T r, g, b;		//scratchapixelå°†Tç›´æ¥è®¾ç½®ä¸ºfloatï¼Œä¼°è®¡æ˜¯å®ƒå†™é”™äº†
 };
 
 typedef Color3<float> Color3f;
 
-//½«ÏñËØÊä³öµ½PPMÎÄ¼şÖĞ£¬PPMÎÄ¼ş¿ÉÒÔÓÃphotoshop´ò¿ª
-//fnÎªPPMÎÄ¼şÃû
-//c´æ´¢ÔÚËùÓĞÏñËØµÄÑÕÉ«
-//widthÎªÍ¼Ïñ¿í¶È£¬µ¥Î»ÎªÏñËØ
-//heightÎªÍ¼Ïñ¸ß¶È£¬µ¥Î»ÎªÏñËØ
+//å°†åƒç´ è¾“å‡ºåˆ°PPMæ–‡ä»¶ä¸­ï¼ŒPPMæ–‡ä»¶å¯ä»¥ç”¨photoshopæ‰“å¼€
+//fnä¸ºPPMæ–‡ä»¶å
+//cå­˜å‚¨åœ¨æ‰€æœ‰åƒç´ çš„é¢œè‰²
+//widthä¸ºå›¾åƒå®½åº¦ï¼Œå•ä½ä¸ºåƒç´ 
+//heightä¸ºå›¾åƒé«˜åº¦ï¼Œå•ä½ä¸ºåƒç´ 
 void saveToPPM(const char *fn, const Color3f *c, const int &width, const int &height)
 {
 	std::ofstream ofs;
-	//ÓÉÓÚÎÒÔÚwindowsÆ½Ì¨£¬flagÒªĞ´ÉÏ£¬ÓÃÀ´ÉèÖÃ¸ñÊ½µÄ£¬µ«ÊÇÎÒ²»ÖªµÀÔõÃ´Ğ´¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£
+	//ç”±äºæˆ‘åœ¨windowså¹³å°ï¼Œflagè¦å†™ä¸Šï¼Œç”¨æ¥è®¾ç½®æ ¼å¼çš„ï¼Œä½†æ˜¯æˆ‘ä¸çŸ¥é“æ€ä¹ˆå†™ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚
 	ofs.open(fn, std::ios::out | std::ios::binary);
 
 	if (ofs.fail())
 	{
-		fprintf(stderr, "ERROR: can't save image to file %s\n", fn);	//stderrÊÇÊ²Ã´ÎÄ¼ş£¿
+		fprintf(stderr, "ERROR: can't save image to file %s\n", fn);	//stderræ˜¯ä»€ä¹ˆæ–‡ä»¶ï¼Ÿ
 	}
 	else
 	{
@@ -58,7 +58,7 @@ void saveToPPM(const char *fn, const Color3f *c, const int &width, const int &he
 		{
 			for (int j = 0; j < width; ++j)
 			{
-				char r = static_cast<char>(std::min(255.f, 255 * pc->r + 0.5f));		//ÎªÊ²Ã´Ê¹ÓÃstatic_cast£¿
+				char r = static_cast<char>(std::min(255.f, 255 * pc->r + 0.5f));		//ä¸ºä»€ä¹ˆä½¿ç”¨static_castï¼Ÿ
 				char g = static_cast<char>(std::min(255.f, 255 * pc->g + 0.5f));
 				char b = static_cast<char>(std::min(255.f, 255 * pc->b + 0.5f));
 				ofs << r << g << b;

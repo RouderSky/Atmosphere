@@ -1,4 +1,4 @@
-#if 0
+ï»¿#if 0
 float bilinear(
 	const float &tx,
 	const float  &ty,
@@ -11,30 +11,30 @@ float bilinear(
 	float  a = c00 * (1 - tx) + c10 * tx;
 	float  b = c01 * (1 - tx) + c11 * tx;
 	return a * (1) - ty) + b * ty;
-#else	//ÕâÖÖĞÎÊ½±È½ÏºÃÀí½â
-	return (1 - tx) * (1 - ty) * c00 +		//×¢Òâ£ºÀëµÃÔ½Ô¶¾ÍÈ¨Öµ¾ÍÔ½Ğ¡
+#else	//è¿™ç§å½¢å¼æ¯”è¾ƒå¥½ç†è§£
+	return (1 - tx) * (1 - ty) * c00 +		//æ³¨æ„ï¼šç¦»å¾—è¶Šè¿œå°±æƒå€¼å°±è¶Šå°
 		tx * (1 - ty) * c10 +
 		(1 - tx) * ty * c01 +
 		tx * ty * c11;
 #endif 
 }
 
-//½«Ò»ÕÅ¾­¹ı²åÖµ·Å´ó
+//å°†ä¸€å¼ ç»è¿‡æ’å€¼æ”¾å¤§
 void testBilinearInterpolation()
 {
 	// testing bilinear interpolation
 	int imageWidth = 512;
-	int gridSizeX = 9, gridSizeY = 9;		//¸ñ×ÓµÄ¸öÊı£¬Õâ¸öÉè¼ÆÕæÀÃ£»Ô­ÏñËØµÄ¸öÊı¾ÍÊÇ10
+	int gridSizeX = 9, gridSizeY = 9;		//æ ¼å­çš„ä¸ªæ•°ï¼Œè¿™ä¸ªè®¾è®¡çœŸçƒ‚ï¼›åŸåƒç´ çš„ä¸ªæ•°å°±æ˜¯10
 	Vec3f *grid2d = new Vec3f[(gridSizeX + 1) * (gridSizeY + 1)]; // lattices 
 																  // fill grid with random colors
 	for (int j = 0, k = 0; j <= gridSizeY; ++j) {
 		for (int i = 0; i <= gridSizeX; ++i, ++k) {
-			grid2d[j * (gridSizeX + 1) + i] = Vec3f(drand48(), drand48(), drand48());		//ÎªÔ­ÏñËØÉè¶¨Ëæ»úÑÕÉ«Öµ
+			grid2d[j * (gridSizeX + 1) + i] = Vec3f(drand48(), drand48(), drand48());		//ä¸ºåŸåƒç´ è®¾å®šéšæœºé¢œè‰²å€¼
 		}
 	}
 
-	//µÃµ½Ò»ÕÅÍ¼Æ¬
-	//½«ÕâÕÅÍ¼Æ¬½øĞĞ·Å´ó£¬ÓÉÔ­À´µÄ10*10À©´óµ½512*512
+	//å¾—åˆ°ä¸€å¼ å›¾ç‰‡
+	//å°†è¿™å¼ å›¾ç‰‡è¿›è¡Œæ”¾å¤§ï¼Œç”±åŸæ¥çš„10*10æ‰©å¤§åˆ°512*512
 
 	// now compute our final image using bilinear interpolation
 	Vec3f *imageData = new Vec3f[imageWidth*imageWidth], *pixel = imageData;

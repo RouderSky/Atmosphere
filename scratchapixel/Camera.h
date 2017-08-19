@@ -1,10 +1,10 @@
-#ifndef __CAMERA_H__
+ï»¿#ifndef __CAMERA_H__
 #define __CAMERA_H__
 
 #include "Matrix44.h"
 #include "Vector.h"
 
-//Î´²âÊÔ
+//æœªæµ‹è¯•
 Matrix44f lookAt(const Vec3f& from, const Vec3f& to)
 {
 	Vec3f forward = from - to;

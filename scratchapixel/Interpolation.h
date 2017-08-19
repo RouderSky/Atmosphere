@@ -1,4 +1,4 @@
-#ifndef __INTERPOLATION_H__
+ï»¿#ifndef __INTERPOLATION_H__
 #define __INTERPOLATION_H__
 
 #ifdef WIN32
@@ -9,11 +9,11 @@
 #include <cstdlib>
 #include "Color3.h"
 
-//Ê¹ÓÃÏßĞÔ²åÖµº¯ÊıÇ°ÏÈ»­¸öÍ¼¸ãÇå³ş×ø±êÌåÏµ
+//ä½¿ç”¨çº¿æ€§æ’å€¼å‡½æ•°å‰å…ˆç”»ä¸ªå›¾ææ¸…æ¥šåæ ‡ä½“ç³»
 
 //Bilinear interpolation 
-//ÕâÀïÊ¹ÓÃµÄ×ø±êÏµ£ºxÖáÕı·½ÏòÏòÓÒ£¬yÖáÕı·½ÏòÏòÉÏ£»
-//tx,tyÖ»ÊÇ×ø±ê±ÈÀı£¬·¶Î§ÊÇ[0,1]
+//è¿™é‡Œä½¿ç”¨çš„åæ ‡ç³»ï¼šxè½´æ­£æ–¹å‘å‘å³ï¼Œyè½´æ­£æ–¹å‘å‘ä¸Šï¼›
+//tx,tyåªæ˜¯åæ ‡æ¯”ä¾‹ï¼ŒèŒƒå›´æ˜¯[0,1]
 template<typename T>
 T bilinear(
 	const float &tx,
@@ -24,14 +24,14 @@ T bilinear(
 	const T &c11)
 {
 #if 0
-	//ÏÈ¶ÔxÖá·½Ïò½øĞĞ²åÖµ
+	//å…ˆå¯¹xè½´æ–¹å‘è¿›è¡Œæ’å€¼
 	T a = c00*(1.f - tx) + c10*tx;
 	T b = c01*(1.f - tx) + c11*tx;
 
-	//ÔÙ½«xÖá·½ÏòÉÏ²åÖµµÄ½á¹ûaºÍb½øĞĞÒ»´ÎyÖá·½ÏòÉÏµÄ²åÖµ
+	//å†å°†xè½´æ–¹å‘ä¸Šæ’å€¼çš„ç»“æœaå’Œbè¿›è¡Œä¸€æ¬¡yè½´æ–¹å‘ä¸Šçš„æ’å€¼
 	return a*(1.f - ty) + b*ty;
 #else
-	//Ö±½Ó¶ÔËÄµãµÄÊı¾İ½øĞĞ¼ÓÈ¨Ïà¼Ó
+	//ç›´æ¥å¯¹å››ç‚¹çš„æ•°æ®è¿›è¡ŒåŠ æƒç›¸åŠ 
 	return (1 - tx)*(1 - ty)*c00 +
 		tx*(1 - ty)*c10 +
 		(1 - tx)*ty*c01 +
@@ -40,8 +40,8 @@ T bilinear(
 }
 
 //Trilinear interpolation
-//ÕâÀïÊ¹ÓÃµÄ×ø±êÏµ£ºxÖáÏòÓÒ£¬yÖáÏòÉÏ£¬zÖáÏòÇ°£¬ÊÇÒ»¸ö×óÊÖ×ø±êÏµ£»
-//tx,ty,tzÖ»ÊÇ×ø±ê±ÈÀı£¬·¶Î§ÊÇ[0,1]
+//è¿™é‡Œä½¿ç”¨çš„åæ ‡ç³»ï¼šxè½´å‘å³ï¼Œyè½´å‘ä¸Šï¼Œzè½´å‘å‰ï¼Œæ˜¯ä¸€ä¸ªå·¦æ‰‹åæ ‡ç³»ï¼›
+//tx,ty,tzåªæ˜¯åæ ‡æ¯”ä¾‹ï¼ŒèŒƒå›´æ˜¯[0,1]
 template<typename T>
 T trilinear(
 	const float &tx,
@@ -57,14 +57,14 @@ T trilinear(
 	const T &c111)
 {
 #if 0
-	//ÏÈ¶Ôx¡¢yÖá·½Ïò½øĞĞË«ÏßĞÔ²åÖµ
+	//å…ˆå¯¹xã€yè½´æ–¹å‘è¿›è¡ŒåŒçº¿æ€§æ’å€¼
 	T e = bilinear(tx, ty, c000, c100, c010, c110);
 	T f = bilinear(tx, ty, c001, c101, c011, c111);
 
-	//ÔÙ½«x¡¢yÖá·½Ïò²åÖµµÄ½á¹û½øĞĞÒ»´Îz·½ÏòÉÏµÄ²åÖµ
+	//å†å°†xã€yè½´æ–¹å‘æ’å€¼çš„ç»“æœè¿›è¡Œä¸€æ¬¡zæ–¹å‘ä¸Šçš„æ’å€¼
 	return (1 - tz)*e + tz*f;
 #else
-	//Ö±½Ó¶Ô°ËµãµÄÊı¾İ½øĞĞ¼ÓÈ¨Ïà¼Ó
+	//ç›´æ¥å¯¹å…«ç‚¹çš„æ•°æ®è¿›è¡ŒåŠ æƒç›¸åŠ 
 	return (1 - tx)*(1 - ty)*(1 - tz)*c000 +
 		         tx*(1 - ty)*(1 - tz)*c100 +
 		         (1 - tx)*ty*(1 - tz)*c010 +
@@ -84,14 +84,14 @@ T trilinear(
 #define RANDFLOAT drand48()
 #endif
 
-//¾ßÌåÒªÍê³ÉµÄ¹¦ÄÜµ½ÍøÕ¾²é¿´£¬µ«ÊÇ×¢Òâ£ºÍøÕ¾ÖĞµÄÍ¼Æ¬ÓĞÎÊÌâ£¬¶à³öÁËÒ»ĞĞÒ»ÁĞ
+//å…·ä½“è¦å®Œæˆçš„åŠŸèƒ½åˆ°ç½‘ç«™æŸ¥çœ‹ï¼Œä½†æ˜¯æ³¨æ„ï¼šç½‘ç«™ä¸­çš„å›¾ç‰‡æœ‰é—®é¢˜ï¼Œå¤šå‡ºäº†ä¸€è¡Œä¸€åˆ—
 void testBilinearInterpolation()
 {
-	//x£¬yÖáÉÏµÄ¸ñ×Ó¸öÊı
+	//xï¼Œyè½´ä¸Šçš„æ ¼å­ä¸ªæ•°
 	int gridSizeX = 9, gridSizeY = 9;			
-	//¸ñ×ÓµÄ¶¥µãÊı¾İ
-	Color3f *vertexData = new Color3f[(gridSizeX + 1)*(gridSizeY + 1)];		//Õâ¸öÊı×éµÄÔ­±¾ÃüÃûÊÇgrid2d£¬²»ÖªµÀÒâÒåÊÇÊ²Ã´
-	//¸ø¸ñ×ÓµÄ¶¥µã¸³Öµ
+	//æ ¼å­çš„é¡¶ç‚¹æ•°æ®
+	Color3f *vertexData = new Color3f[(gridSizeX + 1)*(gridSizeY + 1)];		//è¿™ä¸ªæ•°ç»„çš„åŸæœ¬å‘½åæ˜¯grid2dï¼Œä¸çŸ¥é“æ„ä¹‰æ˜¯ä»€ä¹ˆ
+	//ç»™æ ¼å­çš„é¡¶ç‚¹èµ‹å€¼
 	for (int i = 0; i < gridSizeX + 1; ++i)
 	{
 		for (int j = 0; j < gridSizeY + 1; ++j)
@@ -103,10 +103,10 @@ void testBilinearInterpolation()
 
 	int imageWidth = 512;
 	int imageHeight = 512;
-	Color3f *imageData = new Color3f[imageWidth*imageHeight];	//´æ´¢Í¼ÏñµÄÏñËØÊı¾İ
+	Color3f *imageData = new Color3f[imageWidth*imageHeight];	//å­˜å‚¨å›¾åƒçš„åƒç´ æ•°æ®
 	Color3f *pixel = NULL;
 
-	//²»½øĞĞË«ÏßĞÔ²åÖµµÄÍ¼Ïñ£¬½øĞĞËÄÉáÎåÈë»ñÈ¡¶¥µãÊı¾İ
+	//ä¸è¿›è¡ŒåŒçº¿æ€§æ’å€¼çš„å›¾åƒï¼Œè¿›è¡Œå››èˆäº”å…¥è·å–é¡¶ç‚¹æ•°æ®
 	pixel = imageData;
 	int cellSizeX = imageWidth / gridSizeX;
 	int cellSizeY = imageHeight / gridSizeY;
@@ -117,10 +117,10 @@ void testBilinearInterpolation()
 		{
 			float gx = j / (float)imageWidth * gridSizeX;
 			float gy = i / (float)imageHeight * gridSizeY;
-			int gxi = (int)(gx + 0.5);		//ËÄÉáÎåÈë
+			int gxi = (int)(gx + 0.5);		//å››èˆäº”å…¥
 			int gyi = (int)(gy + 0.5);
-			*pixel = vertexData[gyi*(gridSizeX + 1) + gxi];		//Ö±½ÓÉèÖÃÏñËØÑÕÉ«
-			//ÔÚÃ¿Ò»¸ö¸ñ×Ó¶¥µã»­ÉÏÒ»¸öºÚµã
+			*pixel = vertexData[gyi*(gridSizeX + 1) + gxi];		//ç›´æ¥è®¾ç½®åƒç´ é¢œè‰²
+			//åœ¨æ¯ä¸€ä¸ªæ ¼å­é¡¶ç‚¹ç”»ä¸Šä¸€ä¸ªé»‘ç‚¹
 			int mx = (j + 1) % cellSizeX;
 			int my = (i + 1) % cellSizeY;
 			if(mx>=0&&mx<=2&&my>=0&&my<=2)
@@ -130,18 +130,18 @@ void testBilinearInterpolation()
 	}
 	saveToPPM("./origin.ppm", imageData, imageWidth, imageHeight);
 
-	//¿ªÊ¼²åÖµ³öÍ¼Ïñ
+	//å¼€å§‹æ’å€¼å‡ºå›¾åƒ
 	pixel = imageData;
 	for (int i = 0; i < imageWidth; ++i)
 	{
 		for (int j = 0; j < imageHeight; ++j)
 		{
-			//È·¶¨¸ÃÏñËØËùÊô¸ñ×Ó
+			//ç¡®å®šè¯¥åƒç´ æ‰€å±æ ¼å­
 			float gx = j / (float)imageWidth * gridSizeX;
 			float gy = i / (float)imageHeight * gridSizeY;
 			int gxi = (int)gx;
 			int gyi = (int)gy;
-			//»ñÈ¡¸ñ×ÓËÄ¸ö¶¥µãµÄÊı¾İ
+			//è·å–æ ¼å­å››ä¸ªé¡¶ç‚¹çš„æ•°æ®
 			const Color3f & c00 = vertexData[(gyi + 1)*(gridSizeX + 1)+gxi];
 			const Color3f & c10 = vertexData[(gyi + 1)*(gridSizeX + 1) + (gxi+1)];
 			const Color3f & c01 = vertexData[gyi*(gridSizeX + 1) + gxi];
@@ -149,7 +149,7 @@ void testBilinearInterpolation()
 			*(pixel++) = bilinear(gx - gxi, 1 - (gy - gyi), c00, c10, c01, c11);
 		}
 	}
-	//Êä³öµ½PPMÎÄ¼ş
+	//è¾“å‡ºåˆ°PPMæ–‡ä»¶
 	saveToPPM("./bilinear.ppm", imageData, imageWidth, imageHeight);
 
 
@@ -160,10 +160,10 @@ void testBilinearInterpolation()
 #define IX(size,i,j,k)(i*size*size+j*size+k)
 void testTrilinearInterpoplation()
 {
-	//Ò»¸öÓÉ10*10*10¸ö3dĞ¡Á¢·½Ìå×é³ÉµÄ´óÁ¢·½Ìå
+	//ä¸€ä¸ªç”±10*10*10ä¸ª3då°ç«‹æ–¹ä½“ç»„æˆçš„å¤§ç«‹æ–¹ä½“
 	int gridSize = 10;
 	int numVertices = gridSize + 1;
-	Color3f *vertexData = new Color3f[numVertices* numVertices* numVertices];	//ÍøÕ¾ÉÏÕâÀïĞ´µÄÊÇgrid3d
+	Color3f *vertexData = new Color3f[numVertices* numVertices* numVertices];	//ç½‘ç«™ä¸Šè¿™é‡Œå†™çš„æ˜¯grid3d
 	for (int i = 0; i < numVertices; ++i)
 	{
 		for (int j = 0; j < numVertices; ++j)
@@ -175,12 +175,12 @@ void testTrilinearInterpoplation()
 		}
 	}
 
-	//²åÖµ³ö´óÁ¢·½ÌåµÄËùÓĞÊı¾İ
+	//æ’å€¼å‡ºå¤§ç«‹æ–¹ä½“çš„æ‰€æœ‰æ•°æ®
 	float px, py, pz;
 	float gx, gy, gz;
 	int gxi, gyi, gzi;
 	float tx, ty, tz;
-	for (int i = 0; i < 10e2; ++i)	//¼ÆËã10*(10^2)´Î
+	for (int i = 0; i < 10e2; ++i)	//è®¡ç®—10*(10^2)æ¬¡
 	{
 		px = RANDFLOAT;
 		py = RANDFLOAT;
