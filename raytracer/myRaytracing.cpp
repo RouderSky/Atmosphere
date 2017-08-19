@@ -218,7 +218,7 @@ void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,c
 	Vec3f *pixel = image;
 
 	//确定每一个像素的位置，然后确定primary ray的方向
-	//这里我们假定cavas这个平面位于z=-1这个平面上
+	//这里我们假定：摄像机坐标系与世界坐标系完全重合，所以我们不需要坐标系转换矩阵；且cavas这个平面位于z=-1这个平面上
 	float aspectratio = pixelNumOfWidth / (float)pixelNumOfHeight;
 	float height = 2 * tan(fov / 2 * M_PI / 180);		//canvas宽度
 	float width = height * aspectratio;					//canvas高度

@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="raytracer-origin.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="myRaytracing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
