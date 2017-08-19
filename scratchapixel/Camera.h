@@ -1,6 +1,5 @@
 ﻿#ifndef __CAMERA_H__
 #define __CAMERA_H__
-
 #include "Matrix44.h"
 #include "Vector.h"
 
