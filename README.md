@@ -4,8 +4,11 @@ ps:该项目创建于vs2015，请使用支持c++11的编译器编译
 
 ## scratchapixel ##
 ### 进度 ###
-- Vector类
-- Matrix类
+- class Vector
+- class Matrix
+- class Color3
+- class Interpolation
+- class Camera
 
 ## ray-tracing ##
 ### 进度 ###
