@@ -17,6 +17,47 @@
 #endif
 
 template<typename T>
+class Vec2
+{
+public:
+	Vec2() : x(0), y(0) {}
+	Vec2(T xx) : x(xx), y(xx) {}
+	Vec2(T xx, T yy) : x(xx), y(yy) {}
+	Vec2 operator + (const Vec2 &v) const
+	{
+		return Vec2(x + v.x, y + v.y);
+	}
+	Vec2 operator / (const T &r) const
+	{
+		return Vec2(x / r, y / r);
+	}
+	Vec2 operator * (const T &r) const
+	{
+		return Vec2(x * r, y * r);
+	}
+	Vec2& operator /= (const T &r)
+	{
+		x /= r, y /= r; return *this;
+	}
+	Vec2& operator *= (const T &r)
+	{
+		x *= r, y *= r; return *this;
+	}
+	friend std::ostream& operator << (std::ostream &s, const Vec2<T> &v)
+	{
+		return s << '[' << v.x << ' ' << v.y << ']';
+	}
+	friend Vec2 operator * (const T &r, const Vec2<T> &v)
+	{
+		return Vec2(v.x * r, v.y * r);
+	}
+	T x, y;
+};
+
+typedef Vec2<float> Vec2f;
+typedef Vec2<int> Vec2i;
+
+template<typename T>
 class Vec3
 {
 public:
@@ -65,7 +106,7 @@ public:
 	Vec3f emissionColor;			//自发光颜色，物体表层的一层光线，光线的方向都是法线的方向
 	float transparency;				//透明度
 	float reflection;				//镜面反射度
-	//还可以加上一个折射率属性
+	//还可以加上一个折射率属性，线面的球体全部统一为1.1了
 
 	Sphere(
 		const Vec3f &c,
@@ -94,6 +135,18 @@ public:
 		
 		t = t0 < 0 ? t1 : t0;		//根据发射点在不在物体内部来确定击中距离
 		return true;
+	}
+
+	void getSurfaceData(const Vec3f &raydir, const Vec3f &Phit, Vec3f &Nhit, bool &inside, Vec2f &tex) const
+	{
+		Nhit = Phit - center;				//ray击中点的球体外法线
+		Nhit.normalize();
+	    inside = false;							//ray的发射点是不是在内部
+		if (raydir.dot(Nhit) > 0)
+		{
+			Nhit = -Nhit;
+			inside = true;
+		}
 	}
 };
 
@@ -134,16 +187,11 @@ Vec3f trace(
 	//计算ray击中点的数据
 	Vec3f surfaceColor = 0;
 	Vec3f phit = rayorig + raydir*minHitDist;		//ray击中点
-	///////封装成函数
-	Vec3f nhit = phit - nearSphere->center;			//ray击中点的球体外法线
-	nhit.normalize();
-	bool inside = false;							//ray的发射点是不是在内部
-	if (raydir.dot(nhit) > 0)
-	{
-		nhit = -nhit;
-		inside = true;
-	}
-	/////////////////////
+
+	Vec3f nhit;
+	bool inside;
+	Vec2f tex;
+	nearSphere->getSurfaceData(raydir, phit, nhit, inside, tex);
 
 	//开始计算ray击中点的颜色
 	float bias = 1e-4;		//误差值，为什么设置为0会折射会出问题？？？？？
@@ -179,8 +227,8 @@ Vec3f trace(
 		float fresneleffect = mix(pow(1 - facingration, 3), 1, 0.1);
 
 		surfaceColor = (reflection*fresneleffect +									/*为什么反射效果不要乘上 nearSphere->reflection ???*/
-			refraction*(1 - fresneleffect)*nearSphere->transparency)
-			*nearSphere->surfaceColor;
+						refraction*(1 - fresneleffect)*nearSphere->transparency)
+						*nearSphere->surfaceColor;
 	}
 	else
 	{
