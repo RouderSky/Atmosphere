@@ -134,7 +134,7 @@ Vec3f trace(
 	//计算ray击中点的数据
 	Vec3f surfaceColor = 0;
 	Vec3f phit = rayorig + raydir*minHitDist;		//ray击中点
-	/////////封装成函数
+	///////封装成函数
 	Vec3f nhit = phit - nearSphere->center;			//ray击中点的球体外法线
 	nhit.normalize();
 	bool inside = false;							//ray的发射点是不是在内部
