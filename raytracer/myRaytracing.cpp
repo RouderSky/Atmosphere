@@ -97,12 +97,16 @@ public:
 
 typedef Vec3<float> Vec3f;
 
+//加上环境光...........................................
+
 class Sphere
 {
 public:
 	Vec3f center;
 	float radius, radius2;
 	Vec3f surfaceColor;				//漫反射颜色，几乎所有外来光线都要与这个颜色交互融合
+	bool hasTexture;
+	Vec3f (*textureColor)(const Vec2f&);
 	Vec3f emissionColor;			//自发光颜色，物体表层的一层光线，光线的方向都是法线的方向
 	float transparency;				//透明度
 	float reflection;				//镜面反射度
@@ -112,11 +116,22 @@ public:
 		const Vec3f &c,
 		const float &r,
 		const Vec3f &sc,
+		Vec3f (*tex)(const Vec2f&) = NULL,
 		const float &refl = 0,
 		const float &transp = 0,
 		const Vec3f &ec = 0) :
-		center(c), radius(r), radius2(r*r), surfaceColor(sc), emissionColor(ec), transparency(transp), reflection(refl)
-	{}
+		center(c), radius(r), radius2(r*r), surfaceColor(sc), textureColor(tex), emissionColor(ec), transparency(transp), reflection(refl)
+	{
+		hasTexture = textureColor != NULL;
+	}
+
+	Vec3f getColor(Vec2f uv) const
+	{
+		if (hasTexture)
+			return textureColor(uv);
+		else
+			return surfaceColor;
+	}
 
 	//计算点center到直线raydir的距离d，如果d小于等于radius，那么就相交；
 	//最后要返回是否相交，还要通过引用返回相交点与rayorig的距离(注意rayorig可能在物体内部，也可能在物体外部)
@@ -137,7 +152,7 @@ public:
 		return true;
 	}
 
-	void getSurfaceData(const Vec3f &raydir, const Vec3f &Phit, Vec3f &Nhit, bool &inside, Vec2f &tex) const
+	void getSurfaceData(const Vec3f &raydir, const Vec3f &Phit, Vec3f &Nhit, bool &inside, Vec2f &uv) const
 	{
 		Nhit = Phit - center;				//ray击中点的球体外法线
 		Nhit.normalize();
@@ -147,13 +162,17 @@ public:
 			Nhit = -Nhit;
 			inside = true;
 		}
+
+		//uv坐标....................................
+		uv.x = (1 + atan2(Nhit.z, Nhit.x) / M_PI) * 0.5;
+		uv.y = acosf(Nhit.y) / M_PI;
 	}
 };
 
 #define MAX_RAY_DEPTH 5		//递归深度
 
 //Fresnel equation
-float mix(const float &a, const float &b, const float &mix)
+float fresnelMix(const float &a, const float &b, const float &mix)
 {
 	return b*mix + a*(1 - mix);
 }
@@ -190,8 +209,8 @@ Vec3f trace(
 
 	Vec3f nhit;
 	bool inside;
-	Vec2f tex;
-	nearSphere->getSurfaceData(raydir, phit, nhit, inside, tex);
+	Vec2f uv;
+	nearSphere->getSurfaceData(raydir, phit, nhit, inside, uv);
 
 	//开始计算ray击中点的颜色
 	float bias = 1e-4;		//误差值，为什么设置为0会折射会出问题？？？？？
@@ -224,11 +243,11 @@ Vec3f trace(
 
 		//计算出 菲涅尔 混合值，确定折射光与反射光的叠加比例
 		float facingration = -raydir.dot(nhit);
-		float fresneleffect = mix(pow(1 - facingration, 3), 1, 0.1);
+		float fresneleffect = fresnelMix(pow(1 - facingration, 3), 1, 0.1);
 
 		surfaceColor = (reflection*fresneleffect +									/*为什么反射效果不要乘上 nearSphere->reflection ???*/
 						refraction*(1 - fresneleffect)*nearSphere->transparency)
-						*nearSphere->surfaceColor;
+						*nearSphere->getColor(uv);
 	}
 	else
 	{
@@ -252,7 +271,7 @@ Vec3f trace(
 						break;
 				}
 				if (j == spheres.size())	//没物体挡住光线
-					surfaceColor += std::max(float(0), nhit.dot(lightDire))*spheres[i].emissionColor*nearSphere->surfaceColor;
+					surfaceColor += std::max(float(0), nhit.dot(lightDire))*spheres[i].emissionColor*nearSphere->getColor(uv);
 			}
 		}
 	}
@@ -304,20 +323,32 @@ void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,c
 	delete[] image;
 }
 
+inline
+Vec3f mix(const Vec3f &a, const Vec3f& b, const float &mixValue)
+{
+	return a * (1 - mixValue) + b * mixValue;
+}
+Vec3f textureFunc(const Vec2f &uv)
+{
+	float scale = 10;
+	float pattern = (fmodf(uv.x * scale, 1) > 0.5) ^ (fmodf(uv.y * scale, 1) > 0.5);		//利用uv坐标来计算出棋盘模式，计算的结果只有0和1
+	return mix(Vec3f(0, 0, 0), Vec3f(1, 1, 1), pattern);
+}
+
 int main()
 {
 	srand(13);	//干什么的？？？
 	std::vector<Sphere> spheres;
 	//object
-	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), 0, 0, 0.0));
-	spheres.push_back(Sphere(Vec3f(0.0, 0, -20), 4, Vec3f(1.00, 0.32, 0.36), 1, 0.5));
-	spheres.push_back(Sphere(Vec3f(-5.0, 3.0, -30), 4, Vec3f(0.36, 0.80, 0.36), 0, 0));
-	spheres.push_back(Sphere(Vec3f(6.0, -1, -15), 2, Vec3f(0.90, 0.76, 0.46), 1, 0.0));
-	spheres.push_back(Sphere(Vec3f(5.0, 0, -25), 3, Vec3f(0.65, 0.77, 0.97), 1, 0.0));
-	spheres.push_back(Sphere(Vec3f(-7.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), 1, 0.0));
+	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), NULL, 0, 0, 0.0));
+	spheres.push_back(Sphere(Vec3f(0.0, 0, -20), 4, Vec3f(1.00, 0.32, 0.36), NULL, 1, 0.5));
+	spheres.push_back(Sphere(Vec3f(-5.0, 3.0, -30), 4, Vec3f(0.36, 0.80, 0.36), NULL, 0, 0));
+	spheres.push_back(Sphere(Vec3f(6.0, -1, -15), 2, Vec3f(0.90, 0.76, 0.46), NULL, 1, 0.0));
+	spheres.push_back(Sphere(Vec3f(5.0, 0, -25), 3, Vec3f(0.65, 0.77, 0.97), NULL, 1, 0.0));
+	spheres.push_back(Sphere(Vec3f(-7.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), NULL, 1, 0.0));
 	//light
-	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
-	render(spheres, 1920, 1080, 60);
+	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(3)));
+	render(spheres, 640, 640, 60);
 	return 0;
 }
 
