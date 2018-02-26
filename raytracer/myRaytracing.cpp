@@ -104,7 +104,7 @@ class Sphere
 public:
 	Vec3f center;
 	float radius, radius2;
-	Vec3f surfaceColor;				//漫反射颜色，几乎所有外来光线都要与这个颜色交互融合
+	Vec3f diffuseColor;				//漫反射颜色，几乎所有外来光线都要与这个颜色交互融合
 	bool hasTexture;
 	Vec3f (*textureColor)(const Vec2f&);
 	Vec3f emissionColor;			//自发光颜色，物体表层的一层光线，光线的方向都是法线的方向
@@ -115,22 +115,22 @@ public:
 	Sphere(
 		const Vec3f &c,
 		const float &r,
-		const Vec3f &sc,
+		const Vec3f &dc,
 		Vec3f (*tex)(const Vec2f&) = NULL,
 		const float &refl = 0,
 		const float &transp = 0,
 		const Vec3f &ec = 0) :
-		center(c), radius(r), radius2(r*r), surfaceColor(sc), textureColor(tex), emissionColor(ec), transparency(transp), reflection(refl)
+		center(c), radius(r), radius2(r*r), diffuseColor(dc), textureColor(tex), emissionColor(ec), transparency(transp), reflection(refl)
 	{
 		hasTexture = textureColor != NULL;
 	}
 
-	Vec3f getColor(Vec2f uv) const
+	Vec3f getSurfaceColor(Vec2f uv) const
 	{
 		if (hasTexture)
 			return textureColor(uv);
 		else
-			return surfaceColor;
+			return diffuseColor;
 	}
 
 	//计算点center到直线raydir的距离d，如果d小于等于radius，那么就相交；
@@ -177,6 +177,8 @@ float fresnelMix(const float &a, const float &b, const float &mix)
 	return b*mix + a*(1 - mix);
 }
 
+#define AMBIENT Vec3f(0.05, 0.05, 0.05)
+#define BACKGROUP_COLOR Vec3f(2)
 //raydir一定要是单位向量
 //所有的光线都要相加(叠加)，但是如果有光线L与物体表面是交互的，那么光线L在叠加之前要逐分量相乘(混合)
 Vec3f trace(
@@ -201,10 +203,10 @@ Vec3f trace(
 	}
 
 	if (nearSphere == NULL)
-		return Vec3f(2);							//射线打不中球体，返回背景色rgb(2*255,2*255,2*255)
+		return BACKGROUP_COLOR + AMBIENT;							//射线打不中球体，返回背景色rgb(2*255,2*255,2*255)
 
 	//计算ray击中点的数据
-	Vec3f surfaceColor = 0;
+	Vec3f color = 0;
 	Vec3f phit = rayorig + raydir*minHitDist;		//ray击中点
 
 	Vec3f nhit;
@@ -245,14 +247,18 @@ Vec3f trace(
 		float facingration = -raydir.dot(nhit);
 		float fresneleffect = fresnelMix(pow(1 - facingration, 3), 1, 0.1);
 
-		surfaceColor = (reflection*fresneleffect +									/*为什么反射效果不要乘上 nearSphere->reflection ???*/
-						refraction*(1 - fresneleffect)*nearSphere->transparency)
-						*nearSphere->getColor(uv);
+		color = (
+				reflection*fresneleffect +									/*为什么反射效果不要乘上 nearSphere->reflection ???*/
+				refraction*(1 - fresneleffect)*nearSphere->transparency + 
+				AMBIENT
+				)
+				*nearSphere->getSurfaceColor(uv);
 	}
 	else
 	{
 		//为什么漫反射不用递归？？？
 		//这里我们假设：漫反射材质只从其它发光球体获取光线；这个假设明显有问题，会导致阴影不正常
+		color += AMBIENT * nearSphere->getSurfaceColor(uv);
 		for (unsigned i = 0; i < spheres.size(); ++i)
 		{
 			if (&spheres[i]!=nearSphere && spheres[i].emissionColor.x > 0)			//排除自己，寻找发光体			
@@ -271,12 +277,12 @@ Vec3f trace(
 						break;
 				}
 				if (j == spheres.size())	//没物体挡住光线
-					surfaceColor += std::max(float(0), nhit.dot(lightDire))*spheres[i].emissionColor*nearSphere->getColor(uv);
+					color += std::max(float(0), nhit.dot(lightDire)) * spheres[i].emissionColor * nearSphere->getSurfaceColor(uv);
 			}
 		}
 	}
 
-	return surfaceColor + nearSphere->emissionColor;
+	return color + nearSphere->emissionColor;
 }
 
 //fov是上下夹角
@@ -340,7 +346,7 @@ int main()
 	srand(13);	//干什么的？？？
 	std::vector<Sphere> spheres;
 	//object
-	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), NULL, 0, 0, 0.0));
+	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.5, 0.5, 0.15), NULL, 0, 0, 0.0));
 	spheres.push_back(Sphere(Vec3f(0.0, 0, -20), 4, Vec3f(1.00, 0.32, 0.36), NULL, 1, 0.5));
 	spheres.push_back(Sphere(Vec3f(-5.0, 3.0, -30), 4, Vec3f(0.36, 0.80, 0.36), NULL, 0, 0));
 	spheres.push_back(Sphere(Vec3f(6.0, -1, -15), 2, Vec3f(0.90, 0.76, 0.46), NULL, 1, 0.0));
@@ -348,7 +354,7 @@ int main()
 	spheres.push_back(Sphere(Vec3f(-7.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), NULL, 1, 0.0));
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(3)));
-	render(spheres, 640, 640, 60);
+	render(spheres, 1280, 720, 60);
 	return 0;
 }
 
