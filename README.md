@@ -11,6 +11,7 @@ ps:该项目创建于vs2015，请使用支持c++11的编译器编译
 - class Camera
 
 ## ray-tracing ##
+> Whitted-style ray-tracing
 ### 进度 ###
 - **Specular reflection** 和 **Refraction**：利用 **Fresnel equation** 
 - **Diffuse reflection** ：没有考虑 **Sky light**，仅考虑 **Spot light**，且没有进行 **recursion**
