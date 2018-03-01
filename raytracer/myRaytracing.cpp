@@ -1,171 +1,14 @@
 ﻿#if 1
 
-#include <cstdlib>
-#include <cstdio>
-#include <cmath>
+//#include <cstdlib>
+//#include <cstdio>
+//#include <cmath>
 #include <fstream>
 #include <vector>
 #include <iostream>
-#include <cassert>
-#include <algorithm>
+//#include <cassert>
 
-#if defined __linux__ || defined __APPLE__
-//For Linux
-#else
-//For Windows
-#define M_PI 3.141592653589793 
-#endif
-
-template<typename T>
-class Vec2
-{
-public:
-	Vec2() : x(0), y(0) {}
-	Vec2(T xx) : x(xx), y(xx) {}
-	Vec2(T xx, T yy) : x(xx), y(yy) {}
-	Vec2 operator + (const Vec2 &v) const
-	{
-		return Vec2(x + v.x, y + v.y);
-	}
-	Vec2 operator / (const T &r) const
-	{
-		return Vec2(x / r, y / r);
-	}
-	Vec2 operator * (const T &r) const
-	{
-		return Vec2(x * r, y * r);
-	}
-	Vec2& operator /= (const T &r)
-	{
-		x /= r, y /= r; return *this;
-	}
-	Vec2& operator *= (const T &r)
-	{
-		x *= r, y *= r; return *this;
-	}
-	friend std::ostream& operator << (std::ostream &s, const Vec2<T> &v)
-	{
-		return s << '[' << v.x << ' ' << v.y << ']';
-	}
-	friend Vec2 operator * (const T &r, const Vec2<T> &v)
-	{
-		return Vec2(v.x * r, v.y * r);
-	}
-	T x, y;
-};
-
-typedef Vec2<float> Vec2f;
-typedef Vec2<int> Vec2i;
-
-template<typename T>
-class Vec3
-{
-public:
-	T x, y, z;
-	Vec3() :x(0), y(0), z(0) {}
-	Vec3(T xx) :x(xx), y(xx), z(xx) {}
-	Vec3(T xx, T yy, T zz) :x(xx), y(yy), z(zz) {}
-	Vec3& normalize()
-	{
-		T len = length();
-		if (len > 0)
-		{
-			T fac = 1 / len;
-			x *= fac;
-			y *= fac;
-			z *= fac;
-		}
-		return *this;
-	}
-	Vec3<T> operator * (const T &f) const { return Vec3<T>(x*f, y*f, z*f); }
-	friend Vec3<T> operator * (const T &f, const Vec3<T> &v) { return v*f; }
-	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x*v.x, y*v.y, z*v.z); }	//逐分量相乘，光线与材料混合
-	T dot(const Vec3<T> &v) const { return x*v.x + y*v.y + z*v.z; }
-	Vec3<T> operator - (const Vec3<T> &v) const { return Vec3<T>(x - v.x, y - v.y, z - v.z); }
-	Vec3<T> operator + (const Vec3<T> &v) const { return Vec3<T>(x + v.x, y + v.y, z + v.z); }
-	Vec3<T>& operator +=(const Vec3<T> &v) { x += v.x, y += v.y, z += v.z; return *this; }
-	Vec3<T>& operator -=(const Vec3<T> &v) { x -= v.x, y -= v.y, z -= v.z; return *this; }
-	Vec3<T> operator - () const { return Vec3<T>(-x, -y, -z); }
-	T length2() const { return x*x + y*y + z*z; }
-	T length() const { return sqrt(length2()); }
-	friend std::ostream & operator << (std::ostream &os, const Vec3<T> &c)
-	{
-		os << "[" << v.x << " " << v.y << " " << v.z << "]";
-		return os;
-	}
-};
-
-typedef Vec3<float> Vec3f;
-
-class Sphere
-{
-public:
-	Vec3f center;
-	float radius, radius2;
-	Vec3f diffuseColor;				//漫反射颜色，几乎所有外来光线都要与这个颜色交互融合
-	bool hasTexture;
-	Vec3f (*textureColor)(const Vec2f&);
-	Vec3f emissionColor;			//自发光颜色，物体表层的一层光线，光线的方向都是法线的方向
-	float transparency;				//透明度
-	float reflection;				//镜面反射度
-	//还可以加上一个折射率属性，线面的球体全部统一为1.1了
-
-	Sphere(
-		const Vec3f &c,
-		const float &r,
-		const Vec3f &dc,
-		Vec3f (*tex)(const Vec2f&) = NULL,
-		const float &refl = 0,
-		const float &transp = 0,
-		const Vec3f &ec = 0) :
-		center(c), radius(r), radius2(r*r), diffuseColor(dc), textureColor(tex), emissionColor(ec), transparency(transp), reflection(refl)
-	{
-		hasTexture = textureColor != NULL;
-	}
-
-	Vec3f getSurfaceColor(Vec2f uv) const
-	{
-		if (hasTexture)
-			return textureColor(uv);
-		else
-			return diffuseColor;
-	}
-
-	//计算点center到直线raydir的距离d，如果d小于等于radius，那么就相交；
-	//最后要返回是否相交，还要通过引用返回相交点与rayorig的距离(注意rayorig可能在物体内部，也可能在物体外部)
-	bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t)const
-	{
-		Vec3f l = center - rayorig;
-		float projectOflToRaydir = l.dot(raydir);
-		if (projectOflToRaydir < 0)
-			return false;
-		float d2 = l.length2() - projectOflToRaydir*projectOflToRaydir;
-		if (d2 > radius2)
-			return false;
-		float offset = sqrt(radius2 - d2);
-		float t0 = projectOflToRaydir - offset;
-		float t1 = projectOflToRaydir + offset;
-		
-		t = t0 < 0 ? t1 : t0;		//根据发射点在不在物体内部来确定击中距离
-		return true;
-	}
-
-	void getSurfaceData(const Vec3f &raydir, const Vec3f &Phit, Vec3f &Nhit, bool &inside, Vec2f &uv) const
-	{
-		Nhit = Phit - center;				//ray击中点的球体外法线
-		Nhit.normalize();
-	    inside = false;							//ray的发射点是不是在内部
-		if (raydir.dot(Nhit) > 0)
-		{
-			Nhit = -Nhit;
-			inside = true;
-		}
-
-		//uv坐标....................................
-		uv.x = (1 + atan2(Nhit.z, Nhit.x) / M_PI) * 0.5;
-		uv.y = acosf(Nhit.y) / M_PI;
-	}
-};
+#include "Sphere.h"
 
 #define MAX_RAY_DEPTH 5		//递归深度
 
@@ -364,7 +207,7 @@ int main()
 	srand(13);	//干什么的？？？
 	std::vector<Sphere> spheres;
 	//object
-	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.5, 0.5, 0.15), NULL, 0, 0, 0.0));
+	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.8, 0.5, 0.15), NULL, 0, 0, 0.0));
 	spheres.push_back(Sphere(Vec3f(0.0, 0, -20), 4, Vec3f(1.00, 0.32, 0.36), NULL, 1, 0.5));
 	spheres.push_back(Sphere(Vec3f(-5.0, 3.0, -30), 4, Vec3f(0.36, 0.80, 0.36), NULL, 0, 0));
 	spheres.push_back(Sphere(Vec3f(6.0, -1, -15), 2, Vec3f(0.90, 0.76, 0.46), NULL, 1, 0.0));

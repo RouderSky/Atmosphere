@@ -5,6 +5,14 @@
 #include <cstdio> 
 #include <iostream> 
 #include <iomanip> 
+#include <algorithm>
+
+#if defined __linux__ || defined __APPLE__
+//For Linux
+#else
+//For Windows
+#define M_PI 3.141592653589793 
+#endif
 
 template<typename T>
 class Vec3
@@ -27,33 +35,24 @@ public:
 		return *this;								//这个return多此一举，因为如果外部可以调用这个函数，证明了外面已经拿到了这个向量的本体了，返回完全是多余
 	}
 	
-	Vec3<T> operator + (const Vec3<T> &v) const
-	{
-		return Vec3<T>(x + v.x, y + v.y, z + v.z);
-	}
+	Vec3<T> operator + (const Vec3<T> &v) const{ return Vec3<T>(x + v.x, y + v.y, z + v.z); }
+	Vec3<T> operator - (const Vec3<T> &v) const{ return Vec3<T>(x - v.x, y - v.y, z - v.z); }
+	Vec3<T> operator - () const { return Vec3<T>(-x, -y, -z); }
 
-	Vec3<T> operator - (const Vec3<T> &v) const
-	{
-		return Vec3<T>(x - v.x, y - v.y, z - v.z);
-	}
+	Vec3<T>& operator +=(const Vec3<T> &v) { x += v.x, y += v.y, z += v.z; return *this; }
+	Vec3<T>& operator -=(const Vec3<T> &v) { x -= v.x, y -= v.y, z -= v.z; return *this; }
 
-	Vec3<T> operator * (const T &r) const
-	{
-		return Vec3<T>(x * r, y * r, z * r);
-	}
-	friend Vec3<T> operator * (const T &r, const Vec3<T> &v)
-	{
-		return v*r;
-	}
+	Vec3<T> operator * (const T &r) const{ return Vec3<T>(x * r, y * r, z * r); }
+	friend Vec3<T> operator * (const T &r, const Vec3<T> &v){ return v*r; }
 
-	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x*v.x, y*v.y, z*v.z); }	//逐分量相乘，光线与材料混合
+	//逐分量相乘，光线与材料混合
+	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x*v.x, y*v.y, z*v.z); }
+
+	friend std::ostream& operator << (std::ostream &s, const Vec3<T> &v) { return s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')'; }
 
 	//右边的const代表着该函数不会修改该对象中的任何成员变量，一旦在函数中不小心改了成员变量，编译无法通过，增加了函数安全性
 	//如果该对象在外面被初始化为const类型，那么这个对象是不可以调用非const成员函数的,只能调用const成员函数；给函数加上const声明之后，函数的可用性提高了
-	T dotProduct(const Vec3<T> &v) const
-	{
-		return x*v.x + y*v.y + z*v.z;
-	}
+	T dot(const Vec3<T> &v) const { return x*v.x + y*v.y + z*v.z; }
 
 	Vec3<T> crossProduct(const Vec3<T> &v) const
 	{
@@ -64,15 +63,10 @@ public:
 			);
 	}
 
-	T norm() const
-	{
-		return x*x + y*y + z*z;
-	}
+	T length2() const{ return x*x + y*y + z*z; }
 
-	T length()
-	{
-		return sqrt(norm());				//这个计算方法不是最快的
-	}
+	//这个计算方法不是最快的
+	T length() { return sqrt(length2());}
 
 	//返回的是引用，而且提供了两个版本
 	const T& operator [] (uint8_t i) const
@@ -84,10 +78,7 @@ public:
 		return (&x)[i];		//还有这种操作的？？？x，y，z一定是连续空间的吗？？？？
 	}
 
-	friend std::ostream& operator << (std::ostream &s, const Vec3<T> &v)
-	{
-		return s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
-	}
+	
 
 };
 
@@ -162,4 +153,47 @@ inline T sinPhi(const Vec3<T> &w)
 	if (sintheta == 0) return 0;
 	return clamp<T>(w[1] / sintheta, -1, 1);
 }
+
+
+
+template<typename T>
+class Vec2
+{
+public:
+	Vec2() : x(0), y(0) {}
+	Vec2(T xx) : x(xx), y(xx) {}
+	Vec2(T xx, T yy) : x(xx), y(yy) {}
+	Vec2 operator + (const Vec2 &v) const
+	{
+		return Vec2(x + v.x, y + v.y);
+	}
+	Vec2 operator / (const T &r) const
+	{
+		return Vec2(x / r, y / r);
+	}
+	Vec2 operator * (const T &r) const
+	{
+		return Vec2(x * r, y * r);
+	}
+	Vec2& operator /= (const T &r)
+	{
+		x /= r, y /= r; return *this;
+	}
+	Vec2& operator *= (const T &r)
+	{
+		x *= r, y *= r; return *this;
+	}
+	friend std::ostream& operator << (std::ostream &s, const Vec2<T> &v)
+	{
+		return s << '[' << v.x << ' ' << v.y << ']';
+	}
+	friend Vec2 operator * (const T &r, const Vec2<T> &v)
+	{
+		return Vec2(v.x * r, v.y * r);
+	}
+	T x, y;
+};
+
+typedef Vec2<float> Vec2f;
+typedef Vec2<int> Vec2i;
 #endif

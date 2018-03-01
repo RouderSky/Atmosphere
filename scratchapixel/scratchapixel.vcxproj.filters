@@ -33,9 +33,6 @@
     <ClInclude Include="temp.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Vector.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Color3.h">
       <Filter>头文件</Filter>
     </ClInclude>
