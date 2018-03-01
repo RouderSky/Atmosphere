@@ -97,8 +97,6 @@ public:
 
 typedef Vec3<float> Vec3f;
 
-//加上环境光...........................................
-
 class Sphere
 {
 public:
@@ -177,6 +175,14 @@ float fresnelMix(const float &a, const float &b, const float &mix)
 	return b*mix + a*(1 - mix);
 }
 
+//任务：
+//实现2D纹理映射
+//理解球体uv坐标的计算
+//使用更高级的漫反射计算方法
+//加入多边形网格，为其加上纹理
+//
+
+//这里使用的环境光并不考虑遮挡效果
 #define AMBIENT Vec3f(0.05, 0.05, 0.05)
 #define BACKGROUP_COLOR Vec3f(2)
 //raydir一定要是单位向量
@@ -215,9 +221,9 @@ Vec3f trace(
 	nearSphere->getSurfaceData(raydir, phit, nhit, inside, uv);
 
 	//开始计算ray击中点的颜色
-	float bias = 1e-4;		//误差值，为什么设置为0会折射会出问题？？？？？
+	float bias = 1e-4;		//偏移值
 
-	//难道 漫反射 和 镜面反射+折射 是互斥的吗？？？？
+	//难道 漫反射 和 镜面反射+折射 是互斥的吗？不应该是互斥的，将下面的else去掉就好
 	if ((nearSphere->transparency > 0 || nearSphere->reflection > 0) && depth < MAX_RAY_DEPTH)
 	{
 		//下面计算反射与折射的过程都是比较简单的，因为我们只考虑一条反射线和一条折射线
@@ -285,6 +291,12 @@ Vec3f trace(
 	return color + nearSphere->emissionColor;
 }
 
+inline 
+float clamp(const float &lo, const float &hi, const float &v)
+{ 
+	return std::max(lo, std::min(hi, v)); 
+}
+
 //fov是上下夹角
 void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,const unsigned &pixelNumOfHeight,const float &fov)
 {
@@ -321,9 +333,10 @@ void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,c
 	ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight << "\n255\n";
 	for (unsigned i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
 	{
-		ofs << (unsigned char)(std::min((float)1, image[i].x) * 255 + 0.5)
-			<< (unsigned char)(std::min((float)1, image[i].y) * 255 + 0.5)
-			<< (unsigned char)(std::min((float)1, image[i].z) * 255 + 0.5);
+		//四色五入
+		ofs << (unsigned char)(clamp(0.f, 1.f, image[i].x) * 255 + 0.5)
+			<< (unsigned char)(clamp(0.f, 1.f, image[i].y) * 255 + 0.5)
+			<< (unsigned char)(clamp(0.f, 1.f, image[i].z) * 255 + 0.5);
 	}
 	ofs.close();
 	delete[] image;
@@ -334,11 +347,16 @@ Vec3f mix(const Vec3f &a, const Vec3f& b, const float &mixValue)
 {
 	return a * (1 - mixValue) + b * mixValue;
 }
-Vec3f textureFunc(const Vec2f &uv)
+Vec3f textureFunc1(const Vec2f &uv)
 {
 	float scale = 10;
 	float pattern = (fmodf(uv.x * scale, 1) > 0.5) ^ (fmodf(uv.y * scale, 1) > 0.5);		//利用uv坐标来计算出棋盘模式，计算的结果只有0和1
 	return mix(Vec3f(0, 0, 0), Vec3f(1, 1, 1), pattern);
+}
+
+Vec3f texttureFunc2(const Vec2f &uv)
+{
+	return NULL;
 }
 
 int main()
