@@ -207,6 +207,7 @@ Vec3f textureFunc1(const Vec2f &uv)
 	return mix(Vec3f(0, 0, 0), Vec3f(1, 1, 1), pattern);
 }
 
+//这个函数不正确，改成读PPM算了.........................................
 unsigned char * readBMP(std::string bmpFileName, int &width, int &height)
 {
 	//test bmp read
