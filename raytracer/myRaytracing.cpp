@@ -1,5 +1,5 @@
-﻿#if 1
-
+﻿#define _CRT_SECURE_NO_WARNINGS
+#define NOMINMAX
 //#include <cstdlib>
 //#include <cstdio>
 //#include <cmath>
@@ -7,6 +7,9 @@
 #include <vector>
 #include <iostream>
 //#include <cassert>
+#include <windows.h>
+#include <string>
+
 
 #include "Sphere.h"
 
@@ -140,6 +143,22 @@ float clamp(const float &lo, const float &hi, const float &v)
 	return std::max(lo, std::min(hi, v)); 
 }
 
+//image中的数值范围：[0,1]
+void out2PPM(Vec3f *image,int pixelNumOfWidth,int pixelNumOfHeight,std::string fileName)
+{
+	//输出到PPM文件
+	std::ofstream ofs(fileName, std::ios::out | std::ios::binary);
+	ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight << "\n255\n";
+	for (unsigned i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
+	{
+		//四色五入
+		ofs << (unsigned char)(clamp(0.f, 1.f, image[i].x) * 255 + 0.5)
+			<< (unsigned char)(clamp(0.f, 1.f, image[i].y) * 255 + 0.5)
+			<< (unsigned char)(clamp(0.f, 1.f, image[i].z) * 255 + 0.5);
+	}
+	ofs.close();
+}
+
 //fov是上下夹角
 void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,const unsigned &pixelNumOfHeight,const float &fov)
 {
@@ -171,17 +190,8 @@ void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,c
 		}
 	}
 
-	//输出到PPM文件
-	std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
-	ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight << "\n255\n";
-	for (unsigned i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
-	{
-		//四色五入
-		ofs << (unsigned char)(clamp(0.f, 1.f, image[i].x) * 255 + 0.5)
-			<< (unsigned char)(clamp(0.f, 1.f, image[i].y) * 255 + 0.5)
-			<< (unsigned char)(clamp(0.f, 1.f, image[i].z) * 255 + 0.5);
-	}
-	ofs.close();
+	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "./untitled.ppm");
+
 	delete[] image;
 }
 
@@ -197,18 +207,59 @@ Vec3f textureFunc1(const Vec2f &uv)
 	return mix(Vec3f(0, 0, 0), Vec3f(1, 1, 1), pattern);
 }
 
-Vec3f texttureFunc2(const Vec2f &uv)
+unsigned char * readBMP(std::string bmpFileName, int &width, int &height)
 {
-	return NULL;
+	//test bmp read
+	int linebyte;
+	unsigned char *pBmpBuf;  //存储图像数据  
+	FILE *fp;
+	if ((fp = fopen(bmpFileName.c_str(), "rb")) == NULL)  //以二进制的方式打开文件  
+	{
+		std::cout << "The file " << bmpFileName.c_str() << "was not opened" << std::endl;
+		return NULL;
+	}
+	if (fseek(fp, sizeof(BITMAPFILEHEADER), 0))  //跳过BITMAPFILEHEADE  
+	{
+		std::cout << "跳转失败" << std::endl;
+		return NULL;
+	}
+	BITMAPINFOHEADER infoHead;
+	fread(&infoHead, sizeof(BITMAPINFOHEADER), 1, fp);   //从fp中读取BITMAPINFOHEADER信息到infoHead中,同时fp的指针移动  
+	width = infoHead.biWidth;
+	height = infoHead.biHeight;
+	linebyte = (width * 24 / 8 + 3) / 4 * 4; //计算每行的字节数，24：该图片是24位的bmp图，3：确保不丢失像素  
+
+	pBmpBuf = new unsigned char[linebyte*height];
+	fread(pBmpBuf, sizeof(char), linebyte*height, fp);
+	fclose(fp);   //关闭文件  
+	return pBmpBuf;
+}
+
+Vec3f textureFunc2(const Vec2f &uv)
+{
+	static int width, height;
+	static unsigned char *pBmpBuf = readBMP("checkboard.bmp", width, height);
+	//确定像素坐标
+	int px = uv.x * width;
+	int py = uv.y * height;
+
+	Vec3f color;
+	color.x = pBmpBuf[px*width * 3 + py * 3];
+	color.y = pBmpBuf[px*width * 3 + py * 3 + 1];
+	color.z = pBmpBuf[px*width * 3 + py * 3 + 2];
+
+	return color;
 }
 
 int main()
 {
+#if 1
 	srand(13);	//干什么的？？？
 	std::vector<Sphere> spheres;
 	//object
 	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.8, 0.5, 0.15), NULL, 0, 0, 0.0));
 	spheres.push_back(Sphere(Vec3f(0.0, 0, -20), 4, Vec3f(1.00, 0.32, 0.36), NULL, 1, 0.5));
+	spheres.push_back(Sphere(Vec3f(0.0, 0, -20), 5, Vec3f(0.f), textureFunc2, 1));		//盖住了上一个球，测试完纹理就删掉
 	spheres.push_back(Sphere(Vec3f(-5.0, 3.0, -30), 4, Vec3f(0.36, 0.80, 0.36), NULL, 0, 0));
 	spheres.push_back(Sphere(Vec3f(6.0, -1, -15), 2, Vec3f(0.90, 0.76, 0.46), NULL, 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(5.0, 0, -25), 3, Vec3f(0.65, 0.77, 0.97), NULL, 1, 0.0));
@@ -216,7 +267,9 @@ int main()
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(3)));
 	render(spheres, 1280, 720, 60);
-	return 0;
-}
+#else
 
 #endif
+
+	return 0;
+}
