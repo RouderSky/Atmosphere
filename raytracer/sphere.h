@@ -1,7 +1,6 @@
 #ifndef _SPHERE_H__
 #define _SPHERE_H__
 
-//#include "Geometry.h"
 #include "Vector.h"
 
 class Sphere
