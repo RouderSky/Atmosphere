@@ -143,6 +143,7 @@ void out2PPM(Vec3f *image,int pixelNumOfWidth,int pixelNumOfHeight,std::string f
 	//输出到PPM文件
 	std::ofstream ofs(fileName, std::ios::out | std::ios::binary);
 	ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight << "\n255\n";
+	//ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight;
 	for (unsigned i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
 	{
 		//四色五入
@@ -184,7 +185,7 @@ void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,c
 		}
 	}
 
-	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "./untitled.ppm");
+	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "untitled.ppm");
 
 	delete[] image;
 }
@@ -201,7 +202,7 @@ Vec3f textureFunc1(const Vec2f &uv)
 	return mix(Vec3f(0, 0, 0), Vec3f(1, 1, 1), pattern);
 }
 
-//待实现
+//待实现...............................
 Vec3f * readImage(std::string fileName, int &width, int &height)
 {
 #if 0
@@ -266,7 +267,7 @@ Vec3f textureFunc2(const Vec2f &uv)
 
 int main()
 {
-#if 1
+#if 0
 	srand(13);	//干什么的？？？
 	std::vector<Sphere> spheres;
 	//object
@@ -283,7 +284,8 @@ int main()
 #elif 1
 	//copy
 	//如果可以成功复制ppm文件，证明找到了正确的ppm读取方法
-	std::ifstream ifs("exam6.ppm", std::ios::in | std::ios::binary);
+	//目前复制exam2、exam1000000.ppm、exam1000000 2.ppm是正常的
+	std::ifstream ifs("origin.ppm", std::ios::in | std::ios::binary);
 	std::string formateStr;
 	ifs >> formateStr;
 	int width, height;
@@ -292,6 +294,7 @@ int main()
 	int maxValue;
 	ifs >> maxValue;
 	std::cout << formateStr << " " << width << " " << height << " " << maxValue << std::endl;
+	//std::cout << formateStr << " " << width << " " << height << std::endl;
 
 	Vec3f *colors = new Vec3f[width * height];
 	unsigned char value;
@@ -305,20 +308,42 @@ int main()
 			colors[i / 3].y = color;
 		else
 			colors[i / 3].z = color;
-		std::cout << (int)value << " " << color << std::endl;
+		//std::cout << (int)value << " " << color << std::endl;
 	}
 
 	out2PPM(colors, width, height, "./copy.ppm");
+
+	delete colors;
 #else
 	//out
+	/*
 	Vec3f image[6];
 	image[0] = Vec3f(0.f, 0.1f, 0.2f);
 	image[1] = Vec3f(0.3f, 0.4f, 0.5f);
 	image[2] = Vec3f(0.6f, 0.7f, 0.8f);
 	image[3] = Vec3f(0.9f, 0.1f, 0.2f);
-	image[4] = Vec3f(0.5f, 0.3f, 60.f);
+	image[4] = Vec3f(0.5f, 0.3f, 0.6f);
 	image[5] = Vec3f(0.2f, 0.4f, 0.3f);
 	out2PPM(image, 3, 2, "exam2.ppm");
+	*/
+	/*
+	Vec3f *image = new Vec3f[1000000];
+	for (int i = 0;i < 1000000;++i)
+	{
+		image[i] = Vec3f(0.6f, 0.7f, 0.8f);
+	}
+
+	out2PPM(image, 100, 10000, "exam1000000.ppm");
+	*/
+	Vec3f *image = new Vec3f[1000000];
+	for (int i = 0;i < 1000000;++i)
+	{
+		image[i] = Vec3f(0.6f, 0.7f, 0.8f);
+	}
+
+	out2PPM(image, 10000, 100, "exam1000000 2.ppm");
+
+	delete image;
 
 #endif
 
