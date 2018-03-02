@@ -67,9 +67,13 @@ public:
 			inside = true;
 		}
 
-		//uv坐标....................................
-		uv.x = (1 + atan2(Nhit.z, Nhit.x) / M_PI) * 0.5;
-		uv.y = acosf(Nhit.y) / M_PI;
+		//uv坐标是在模型空间下计算的，由于这个程序还没有引入模型空间，所以暂时用击中法线来代替
+		//x代表列，y代表行
+		//up轴是y
+		//uv.x = (1 + atan2(Nhit.z, Nhit.x) / M_PI) * 0.5;
+		//uv.y = acosf(Nhit.y) / M_PI;
+		uv.x = (M_PI+sphericalPhi(Nhit)) / (2.0 * M_PI);
+		uv.y = sphericalTheta(Nhit) / M_PI;
 	}
 };
 

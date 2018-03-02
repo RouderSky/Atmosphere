@@ -137,12 +137,6 @@ Vec3f trace(
 	return color + nearSphere->emissionColor;
 }
 
-inline 
-float clamp(const float &lo, const float &hi, const float &v)
-{ 
-	return std::max(lo, std::min(hi, v)); 
-}
-
 //image中的数值范围：[0,1]
 void out2PPM(Vec3f *image,int pixelNumOfWidth,int pixelNumOfHeight,std::string fileName)
 {
@@ -152,9 +146,9 @@ void out2PPM(Vec3f *image,int pixelNumOfWidth,int pixelNumOfHeight,std::string f
 	for (unsigned i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
 	{
 		//四色五入
-		ofs << (unsigned char)(clamp(0.f, 1.f, image[i].x) * 255 + 0.5)
-			<< (unsigned char)(clamp(0.f, 1.f, image[i].y) * 255 + 0.5)
-			<< (unsigned char)(clamp(0.f, 1.f, image[i].z) * 255 + 0.5);
+		ofs << (unsigned char)(clamp(image[i].x, 0.f, 1.f) * 255 + 0.5)
+			<< (unsigned char)(clamp(image[i].y, 0.f, 1.f) * 255 + 0.5)
+			<< (unsigned char)(clamp(image[i].z, 0.f, 1.f) * 255 + 0.5);
 	}
 	ofs.close();
 }
@@ -207,16 +201,17 @@ Vec3f textureFunc1(const Vec2f &uv)
 	return mix(Vec3f(0, 0, 0), Vec3f(1, 1, 1), pattern);
 }
 
-//这个函数不正确，改成读PPM算了.........................................
-unsigned char * readBMP(std::string bmpFileName, int &width, int &height)
+//待实现
+Vec3f * readImage(std::string fileName, int &width, int &height)
 {
-	//test bmp read
+#if 0
+	//read BMP
 	int linebyte;
 	unsigned char *pBmpBuf;  //存储图像数据  
 	FILE *fp;
-	if ((fp = fopen(bmpFileName.c_str(), "rb")) == NULL)  //以二进制的方式打开文件  
+	if ((fp = fopen(fileName.c_str(), "rb")) == NULL)  //以二进制的方式打开文件  
 	{
-		std::cout << "The file " << bmpFileName.c_str() << "was not opened" << std::endl;
+		std::cout << "The file " << fileName.c_str() << "was not opened" << std::endl;
 		return NULL;
 	}
 	if (fseek(fp, sizeof(BITMAPFILEHEADER), 0))  //跳过BITMAPFILEHEADE  
@@ -234,22 +229,39 @@ unsigned char * readBMP(std::string bmpFileName, int &width, int &height)
 	fread(pBmpBuf, sizeof(char), linebyte*height, fp);
 	fclose(fp);   //关闭文件  
 	return pBmpBuf;
+#else
+	//readPPM
+
+	return NULL;
+#endif
 }
 
 Vec3f textureFunc2(const Vec2f &uv)
 {
-	static int width, height;
-	static unsigned char *pBmpBuf = readBMP("checkboard.bmp", width, height);
+	int width = 4, height = 4;
+	Vec3f pPixBuf[16] = { 
+		Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),
+		Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),
+		Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),
+		Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f)
+	};
+ 
 	//确定像素坐标
 	int px = uv.x * width;
 	int py = uv.y * height;
 
-	Vec3f color;
-	color.x = pBmpBuf[px*width * 3 + py * 3];
-	color.y = pBmpBuf[px*width * 3 + py * 3 + 1];
-	color.z = pBmpBuf[px*width * 3 + py * 3 + 2];
+	return pPixBuf[py*width + px];
 
+	/*
+	//用于pPixBuf是float数组时
+	Vec3f color;
+	color.x = pPixBuf[py*width * 3 + px * 3];
+	color.y = pPixBuf[py*width * 3 + px * 3 + 1];
+	color.z = pPixBuf[py*width * 3 + px * 3 + 2];
 	return color;
+	*/
+
+	
 }
 
 int main()
@@ -268,7 +280,45 @@ int main()
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(3)));
 	render(spheres, 1280, 720, 60);
+#elif 1
+	//copy
+	//如果可以成功复制ppm文件，证明找到了正确的ppm读取方法
+	std::ifstream ifs("exam6.ppm", std::ios::in | std::ios::binary);
+	std::string formateStr;
+	ifs >> formateStr;
+	int width, height;
+	ifs >> width;
+	ifs >> height;
+	int maxValue;
+	ifs >> maxValue;
+	std::cout << formateStr << " " << width << " " << height << " " << maxValue << std::endl;
+
+	Vec3f *colors = new Vec3f[width * height];
+	unsigned char value;
+	for (int i = 0;i < width * height * 3;++i)
+	{
+		ifs >> value;
+		float color = 1.f * value / maxValue;
+		if (i % 3 == 0)
+			colors[i / 3].x = color;
+		else if(i%3 == 1)
+			colors[i / 3].y = color;
+		else
+			colors[i / 3].z = color;
+		std::cout << (int)value << " " << color << std::endl;
+	}
+
+	out2PPM(colors, width, height, "./copy.ppm");
 #else
+	//out
+	Vec3f image[6];
+	image[0] = Vec3f(0.f, 0.1f, 0.2f);
+	image[1] = Vec3f(0.3f, 0.4f, 0.5f);
+	image[2] = Vec3f(0.6f, 0.7f, 0.8f);
+	image[3] = Vec3f(0.9f, 0.1f, 0.2f);
+	image[4] = Vec3f(0.5f, 0.3f, 60.f);
+	image[5] = Vec3f(0.2f, 0.4f, 0.3f);
+	out2PPM(image, 3, 2, "exam2.ppm");
 
 #endif
 

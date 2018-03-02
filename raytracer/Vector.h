@@ -85,7 +85,12 @@ public:
 typedef Vec3<float> Vec3f;
 typedef Vec3<int> Vec3i;
 
-//----------------------------以下代码用到的机会不多
+
+template<typename T>
+inline T clamp(const T &v, const T &lo, const T &hi)
+{
+	return std::max(lo, std::min(hi, v));
+}
 
 //球面坐标到笛卡尔坐标
 template<typename T>
@@ -94,21 +99,28 @@ Vec3<T> sphericalToCartesian(const T &theta, const T &phi)
 	return Vec3<T>(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
 }
 
+////////////up坐标轴是y轴，如果需要改成z轴，交换下y、z的数据就好
+
 //笛卡尔坐标到球面坐标
 //输入的向量一定要是一个单位向量
 template<typename T>
-inline T sphericalTheta(const Vec3<T> &v)
+inline T sphericalTheta(Vec3<T> &v)		//原本有const的
 {
-	return acos(clamp<T>(v[2], -1, 1));		//为了安全考虑，避免v[2]数据存在微小的误差
+	return acos(clamp<T>(v[1], -1, 1));		//为了安全考虑，避免v[2]数据存在微小的误差
 }
 
 //笛卡尔坐标到球面坐标
 template<typename T>
-inline T sphericalPhi(const Vec3<T> &v)
+inline T sphericalPhi(Vec3<T> &v)		//原本有const的
 {
-	T p = atan2(v[1], v[0]);
-	return (p < 0) ? p + 2 * M_PI : p;		//由于角度一旦大于180度，atan会自动返回对应负角度；所以，为了避免混乱，这里手动统一，无论怎么样，都会返回一个正的角度；
+	//atan2(Nhit.z, Nhit.x)
+	T p = atan2(v[2], v[0]);
+	//由于角度一旦大于180度，atan会自动返回对应负角度；所以，为了避免混乱，这里手动统一，无论怎么样，都会返回一个正的角度；
+	//原本return (p < 0) ? p + 2 * M_PI : p;		
+	return p;
 }
+
+///////////////////////////////////////////////////////////////
 
 //球面坐标θ的cos值
 //输入的向量一定要是一个单位向量
