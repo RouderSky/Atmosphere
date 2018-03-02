@@ -113,7 +113,9 @@
     <ClCompile Include="myRaytracing.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common.h" />
     <ClInclude Include="Geometry.h" />
+    <ClInclude Include="IOPPM.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>

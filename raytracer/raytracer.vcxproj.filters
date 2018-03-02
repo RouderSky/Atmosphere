@@ -29,5 +29,11 @@
     <ClInclude Include="Vector.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="IOPPM.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

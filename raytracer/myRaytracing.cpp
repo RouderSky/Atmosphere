@@ -1,16 +1,16 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
-#define NOMINMAX
+//#define NOMINMAX
 //#include <cstdlib>
 //#include <cstdio>
 //#include <cmath>
-#include <fstream>
-#include <vector>
+//#include <fstream>
+//#include <vector>
 #include <iostream>
 //#include <cassert>
-#include <windows.h>
-#include <string>
+//#include <windows.h>
+//#include <string>
 
-
+#include "IOPPM.h"
 #include "Sphere.h"
 
 #define MAX_RAY_DEPTH 5		//递归深度
@@ -137,22 +137,7 @@ Vec3f trace(
 	return color + nearSphere->emissionColor;
 }
 
-//image中的数值范围：[0,1]
-void out2PPM(Vec3f *image,int pixelNumOfWidth,int pixelNumOfHeight,std::string fileName)
-{
-	//输出到PPM文件
-	std::ofstream ofs(fileName, std::ios::out | std::ios::binary);
-	ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight << "\n255\n";
-	//ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight;
-	for (unsigned i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
-	{
-		//四色五入
-		ofs << (unsigned char)(clamp(image[i].x, 0.f, 1.f) * 255 + 0.5)
-			<< (unsigned char)(clamp(image[i].y, 0.f, 1.f) * 255 + 0.5)
-			<< (unsigned char)(clamp(image[i].z, 0.f, 1.f) * 255 + 0.5);
-	}
-	ofs.close();
-}
+
 
 //fov是上下夹角
 void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,const unsigned &pixelNumOfHeight,const float &fov)
@@ -202,72 +187,31 @@ Vec3f textureFunc1(const Vec2f &uv)
 	return mix(Vec3f(0, 0, 0), Vec3f(1, 1, 1), pattern);
 }
 
-//待实现...............................
-Vec3f * readImage(std::string fileName, int &width, int &height)
+Vec3f readColorFromPPM(const std::string &fileName, const Vec2f &uv)
 {
-#if 0
-	//read BMP
-	int linebyte;
-	unsigned char *pBmpBuf;  //存储图像数据  
-	FILE *fp;
-	if ((fp = fopen(fileName.c_str(), "rb")) == NULL)  //以二进制的方式打开文件  
-	{
-		std::cout << "The file " << fileName.c_str() << "was not opened" << std::endl;
-		return NULL;
-	}
-	if (fseek(fp, sizeof(BITMAPFILEHEADER), 0))  //跳过BITMAPFILEHEADE  
-	{
-		std::cout << "跳转失败" << std::endl;
-		return NULL;
-	}
-	BITMAPINFOHEADER infoHead;
-	fread(&infoHead, sizeof(BITMAPINFOHEADER), 1, fp);   //从fp中读取BITMAPINFOHEADER信息到infoHead中,同时fp的指针移动  
-	width = infoHead.biWidth;
-	height = infoHead.biHeight;
-	linebyte = (width * 24 / 8 + 3) / 4 * 4; //计算每行的字节数，24：该图片是24位的bmp图，3：确保不丢失像素  
+	static auto width = size_t{ 0 };
+	static auto height = size_t{ 0 };
+	static auto maxValue = size_t{ 0 };
+	static auto pixel_data = readRgbImage(fileName, &width, &height, &maxValue);
 
-	pBmpBuf = new unsigned char[linebyte*height];
-	fread(pBmpBuf, sizeof(char), linebyte*height, fp);
-	fclose(fp);   //关闭文件  
-	return pBmpBuf;
-#else
-	//readPPM
+	int px = uv.x * width;
+	int py = uv.y * height;
 
-	return NULL;
-#endif
+	Vec3f color;
+	color.x = 1.f * (*pixel_data)[py*width * 3 + px * 3] / maxValue;
+	color.y = 1.f * (*pixel_data)[py*width * 3 + px * 3 + 1] / maxValue;
+	color.z = 1.f * (*pixel_data)[py*width * 3 + px * 3 + 2] / maxValue;
+	return color;
 }
 
 Vec3f textureFunc2(const Vec2f &uv)
 {
-	int width = 4, height = 4;
-	Vec3f pPixBuf[16] = { 
-		Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),
-		Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),
-		Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),
-		Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f),Vec3f(0.f, 0.f, 0.f),Vec3f(1.f, 1.f, 1.f)
-	};
- 
-	//确定像素坐标
-	int px = uv.x * width;
-	int py = uv.y * height;
-
-	return pPixBuf[py*width + px];
-
-	/*
-	//用于pPixBuf是float数组时
-	Vec3f color;
-	color.x = pPixBuf[py*width * 3 + px * 3];
-	color.y = pPixBuf[py*width * 3 + px * 3 + 1];
-	color.z = pPixBuf[py*width * 3 + px * 3 + 2];
-	return color;
-	*/
-
-	
+	return readColorFromPPM("map.ppm", uv);
 }
 
 int main()
 {
-#if 0
+#if 1
 	srand(13);	//干什么的？？？
 	std::vector<Sphere> spheres;
 	//object
@@ -282,68 +226,29 @@ int main()
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(3)));
 	render(spheres, 1280, 720, 60);
 #elif 1
-	//copy
-	//如果可以成功复制ppm文件，证明找到了正确的ppm读取方法
-	//目前复制exam2、exam1000000.ppm、exam1000000 2.ppm是正常的
-	std::ifstream ifs("origin.ppm", std::ios::in | std::ios::binary);
-	std::string formateStr;
-	ifs >> formateStr;
-	int width, height;
-	ifs >> width;
-	ifs >> height;
-	int maxValue;
-	ifs >> maxValue;
-	std::cout << formateStr << " " << width << " " << height << " " << maxValue << std::endl;
-	//std::cout << formateStr << " " << width << " " << height << std::endl;
+	auto width = size_t{ 0 };
+	auto height = size_t{ 0 };
+	auto pixel_data = std::vector<uint8_t>();
+	readRgbImage("untitled.ppm", &width, &height, &pixel_data);
 
 	Vec3f *colors = new Vec3f[width * height];
 	unsigned char value;
-	for (int i = 0;i < width * height * 3;++i)
+	for (int i = 0; i < width * height * 3; ++i)
 	{
-		ifs >> value;
-		float color = 1.f * value / maxValue;
+		float color = 1.f * pixel_data[i] / 255;
 		if (i % 3 == 0)
 			colors[i / 3].x = color;
-		else if(i%3 == 1)
+		else if (i % 3 == 1)
 			colors[i / 3].y = color;
 		else
 			colors[i / 3].z = color;
-		//std::cout << (int)value << " " << color << std::endl;
 	}
 
-	out2PPM(colors, width, height, "./copy.ppm");
+	out2PPM(colors, width, height, "copy.ppm");
 
-	delete colors;
+	delete[] colors;
+
 #else
-	//out
-	/*
-	Vec3f image[6];
-	image[0] = Vec3f(0.f, 0.1f, 0.2f);
-	image[1] = Vec3f(0.3f, 0.4f, 0.5f);
-	image[2] = Vec3f(0.6f, 0.7f, 0.8f);
-	image[3] = Vec3f(0.9f, 0.1f, 0.2f);
-	image[4] = Vec3f(0.5f, 0.3f, 0.6f);
-	image[5] = Vec3f(0.2f, 0.4f, 0.3f);
-	out2PPM(image, 3, 2, "exam2.ppm");
-	*/
-	/*
-	Vec3f *image = new Vec3f[1000000];
-	for (int i = 0;i < 1000000;++i)
-	{
-		image[i] = Vec3f(0.6f, 0.7f, 0.8f);
-	}
-
-	out2PPM(image, 100, 10000, "exam1000000.ppm");
-	*/
-	Vec3f *image = new Vec3f[1000000];
-	for (int i = 0;i < 1000000;++i)
-	{
-		image[i] = Vec3f(0.6f, 0.7f, 0.8f);
-	}
-
-	out2PPM(image, 10000, 100, "exam1000000 2.ppm");
-
-	delete image;
 
 #endif
 

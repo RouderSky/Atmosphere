@@ -86,12 +86,6 @@ typedef Vec3<float> Vec3f;
 typedef Vec3<int> Vec3i;
 
 
-template<typename T>
-inline T clamp(const T &v, const T &lo, const T &hi)
-{
-	return std::max(lo, std::min(hi, v));
-}
-
 //球面坐标到笛卡尔坐标
 template<typename T>
 Vec3<T> sphericalToCartesian(const T &theta, const T &phi)
