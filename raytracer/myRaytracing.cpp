@@ -21,18 +21,6 @@ float fresnelMix(const float &a, const float &b, const float &mix)
 	return b*mix + a*(1 - mix);
 }
 
-//任务：
-//实现2D纹理映射			...
-//理解球体uv坐标的计算		...
-//反走样
-//软阴影
-//光泽反射
-//模型空间
-//摄像机空间
-//使用更高级的漫反射计算方法
-//加入多边形网格，为其加上纹理
-//运动模糊
-
 //这里使用的环境光并不考虑遮挡效果
 #define AMBIENT Vec3f(0.05, 0.05, 0.05)
 #define BACKGROUP_COLOR Vec3f(2)
