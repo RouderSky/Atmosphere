@@ -113,6 +113,7 @@
     <ClCompile Include="myRaytracing.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AreaLight.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="Geometry.h" />

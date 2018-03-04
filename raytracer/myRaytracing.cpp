@@ -24,8 +24,8 @@ float fresnelMix(const float &a, const float &b, const float &mix)
 
 //迟点将下面两个参数作为render函数的参数
 //这里使用的环境光并不考虑遮挡效果
-#define AMBIENT Vec3f(0.3, 0.3, 0.3)		//环境光是一种trick
-#define BACKGROUP_COLOR Vec3f(2)
+#define AMBIENT Vec3f(0) //Vec3f(0.3, 0.3, 0.3)		//环境光是一种trick
+#define BACKGROUP_LIGHT Vec3f(1)
 
 //raydir一定要是单位向量
 //所有的光线都要相加(叠加)，但是如果有光线L与物体表面是交互的，那么光线L在叠加之前要逐分量相乘(混合)
@@ -53,7 +53,7 @@ Vec3f trace(
 
 	//射线打不中球体，返回背景光rgb(2*255,2*255,2*255)
 	if (nearSphere == NULL)
-		return BACKGROUP_COLOR;
+		return BACKGROUP_LIGHT;
 
 	//计算ray击中点的数据
 	
@@ -102,34 +102,42 @@ Vec3f trace(
 				)
 				*nearSphere->getSurfaceColor(uv);
 	}
-	else
+	else			//表面非常粗糙时，镜面反射就近似于下面这种漫反射
 	{
-		//表面非常粗糙时，镜面反射就近似于下面这种漫反射
-
 		color += AMBIENT * nearSphere->getSurfaceColor(uv);
-		//为什么漫反射不用递归？？？
-		//这里我们假设：漫反射材质只从其它发光球体获取光线；这个假设明显有问题，会导致阴影不正常
+
+		//这里我们假设：漫反射材质只从其它发光球体获取光线；这个假设明显有问题，忽略了其它光线，会导致阴影不正常
 		for (unsigned i = 0; i < spheres.size(); ++i)
 		{
-			if (&spheres[i]!=nearSphere && spheres[i].emissionColor.x > 0)			//排除自己，寻找发光体			
+			//排除自己，寻找发光体
+			if (&spheres[i] != nearSphere && spheres[i].emissionColor.x > 0)
 			{
-				//检查有没有挡住光线
-				bool block = false;
 				Vec3f lightDire = spheres[i].center - phit;
 				lightDire.normalize();
+
 				int j;
 				for (j = 0; j < spheres.size(); ++j)
 				{
-					if(j==i)		//排除发光体
+					//排除当前发光体
+					if (j == i)
 						continue;
+					//检查是否挡住光线
 					float t;
 					if (spheres[j].intersect(phit + nhit*bias, lightDire, t))
 						break;
 				}
 				if (j == spheres.size())	//没物体挡住光线
+				{
 					color += std::max(float(0), nhit.dot(lightDire)) * spheres[i].emissionColor * nearSphere->getSurfaceColor(uv);
+					//float facingration = -raydir.dot(nhit);
+					//float fresneleffect = fresnelMix(pow(1 - facingration, 3), 1, 0.1);
+					//color += std::max(float(0), nhit.dot(lightDire)) * trace(phit - nhit*bias, lightDire, spheres, depth + 1, maxDepth) * nearSphere->getSurfaceColor(uv) * fresneleffect;			//是不是做光照衰减才行？？？
+
+				}
 			}
 		}
+
+		//检测面积光
 	}
 
 	return color + nearSphere->emissionColor;

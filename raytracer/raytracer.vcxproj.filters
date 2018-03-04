@@ -41,5 +41,8 @@
     <ClInclude Include="Matrix44.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="AreaLight.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
