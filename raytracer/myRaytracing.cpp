@@ -110,7 +110,7 @@ Vec3f trace(
 		for (unsigned i = 0; i < spheres.size(); ++i)
 		{
 			//排除自己，寻找发光体
-			if (&spheres[i] != nearSphere && spheres[i].emissionColor.x > 0)
+			if (&spheres[i] != nearSphere && spheres[i].emissionColor.x > 0)		//isLight............
 			{
 				Vec3f lightDire = spheres[i].center - phit;
 				lightDire.normalize();
@@ -123,7 +123,7 @@ Vec3f trace(
 						continue;
 					//检查是否挡住光线
 					float t;
-					if (spheres[j].intersect(phit + nhit*bias, lightDire, t))
+					if (spheres[j].intersect(phit + nhit*bias, lightDire, t))		//isBlock..............
 						break;
 				}
 				if (j == spheres.size())	//没物体挡住光线
