@@ -12,6 +12,7 @@
 
 #include "IOPPM.h"
 #include "Sphere.h"
+#include "Camera.h"
 
 #define MAX_RAY_DEPTH 5		//递归深度
 
@@ -136,34 +137,21 @@ Vec3f trace(
 
 //#define JITTERING
 //fov是上下夹角
-void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,const unsigned &pixelNumOfHeight,const float &fov)
+void render(const std::vector<Sphere> &spheres,const Vec3f &camPosition,const Vec3f &camDir, const unsigned &pixelNumOfWidth,const unsigned &pixelNumOfHeight,const float &fov)
 {
 	//存储像素颜色，最后输入到PPM文件，所以这个数组和PPM文件是一个映射关系
 	Vec3f *image = new Vec3f[pixelNumOfWidth*pixelNumOfHeight];
 	Vec3f *pixel = image;
 
-	//确定每一个像素的位置，然后确定primary ray的方向
-	//这里我们假定：摄像机坐标系与世界坐标系完全重合，所以我们不需要坐标系转换矩阵；且cavas这个平面位于z=-1这个平面上
-	float aspectratio = pixelNumOfWidth / (float)pixelNumOfHeight;
-	float height = 2 * tan(fov / 2 * M_PI / 180);		//canvas宽度
-	float width = height * aspectratio;					//canvas高度
-	float widthOfPixel = width / pixelNumOfWidth;		//canvas上的像素宽度
-	float heightOfPixel = height / pixelNumOfHeight;	//canvas上的像素高度
-
-#ifdef JITTERING
-
-#else
-	//第一个像素中心点的摄像机坐标
-	float x0 = -(width / 2) + (widthOfPixel / 2);
-	float y0 = (height / 2) - (heightOfPixel / 2);
-#endif
+	Camera *camera = new Camera(camPosition, camDir, pixelNumOfWidth, pixelNumOfHeight, fov);
 
 	//确定每个像素的颜色，这个循环可以并行计算
 	//注意：PPM文件必须按照从上到下、从左到右的顺序输入一幅图像的信息
-	for (int i = 0; i < pixelNumOfHeight; ++i)			//行
-		for (int j = 0; j < pixelNumOfWidth; ++j)		//列
+	for (int i = pixelNumOfHeight - 1; i >=0; --i)			//行
+		for (int j = 0; j < pixelNumOfWidth; ++j)			//列
 		{
 #ifdef JITTERING
+			//抖动反走样
 			int n = 4;
 			for (int p = 0; p < n; ++p)
 				for (int q = 0; q < n; q++)
@@ -172,11 +160,13 @@ void render(const std::vector<Sphere> &spheres,const unsigned &pixelNumOfWidth,c
 				}
 #else
 			//不带反走样
-			float pixelX = x0 + j*widthOfPixel;
-			float pixelY = y0 - i*heightOfPixel;
-			Vec3f primaryRayDir(pixelX, pixelY, -1);
+			//像素坐标转换成屏幕坐标
+			float y = i+0.5f;
+			float x = j+0.5f;
+
+			Vec3f primaryRayDir = camera->getCameraRayInWorld(x,y);
 			primaryRayDir.normalize();
-			(*pixel++) = trace(Vec3f(0), primaryRayDir, spheres, 0);	//第一个参数可以是像素点的位置
+			(*pixel++) = trace(camPosition, primaryRayDir, spheres, 0);
 #endif
 		}
 
@@ -219,10 +209,11 @@ Vec3f textureFunc2(const Vec2f &uv)
 	return readColorFromPPM("map.ppm", uv);
 }
 
+//世界坐标：右手系
 int main()
 {
 #if 1
-	srand(13);	//干什么的？？？
+	srand(13);
 	std::vector<Sphere> spheres;
 	//object
 	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.8, 0.5, 0.15), NULL, 0, 0, 0.0));
@@ -234,7 +225,7 @@ int main()
 	spheres.push_back(Sphere(Vec3f(-7.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), NULL, 1, 0.0));
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(3)));
-	render(spheres, 1280, 720, 60);
+	render(spheres, Vec3f(0, 0, 0), Vec3f(0, 0, -1), 1280, 720, 60);
 #elif 1
 	auto width = size_t{ 0 };
 	auto height = size_t{ 0 };
