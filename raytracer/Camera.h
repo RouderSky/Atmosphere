@@ -24,7 +24,7 @@ public:
 		pixelNumOfHeight(pixelNumOfHeight),
 		fov(fov)
 	{
-		MCam2World = lookAt();
+		MCam2World = getMatrixForCam2World();
 	}
 
 
@@ -50,8 +50,9 @@ public:
 	}
 
 	//左乘
-	Matrix44f lookAt()
+	Matrix44f getMatrixForCam2World()
 	{
+		//from to算法
 		Vec3f forward = -dir;
 		forward.normalize();
 		Vec3f right = Vec3f(0, 1, 0).crossProduct(forward);

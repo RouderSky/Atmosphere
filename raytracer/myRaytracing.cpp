@@ -6,7 +6,7 @@
 //#include <fstream>
 //#include <vector>
 #include <iostream>
-//#include <cassert>2
+//#include <cassert>
 //#include <windows.h>
 //#include <string>
 
@@ -33,7 +33,8 @@ Vec3f trace(
 	const Vec3f &rayorig,
 	const Vec3f &raydir,
 	const std::vector<Sphere> &spheres,
-	const int &depth)
+	const int &depth,
+	const int &maxDepth)
 { 
 	float minHitDist = INFINITY;			//rayorig到最靠近的平面的距离
 	const Sphere* nearSphere = NULL;		//ray击中的最靠近的球体
@@ -74,7 +75,7 @@ Vec3f trace(
 		//只要是折射都会有镜面反射
 		Vec3f refldir = raydir - nhit * 2 * raydir.dot(nhit);
 		refldir.normalize();
-		Vec3f reflection = trace(phit + nhit*bias, refldir, spheres, depth + 1);
+		Vec3f reflection = trace(phit + nhit*bias, refldir, spheres, depth + 1, maxDepth);
 
 		//折射
 		Vec3f refraction;
@@ -88,7 +89,7 @@ Vec3f trace(
 			Vec3f refrdir = (niCmpT0nt*cosi - cost)*nhit + niCmpT0nt*raydir;
 			refldir.normalize();
 
-			refraction = trace(phit - nhit*bias, refrdir, spheres, depth + 1);
+			refraction = trace(phit - nhit*bias, refrdir, spheres, depth + 1, maxDepth);
 		}
 
 		//计算出 菲涅尔 混合值，确定折射光与反射光的叠加比例
@@ -134,10 +135,15 @@ Vec3f trace(
 	return color + nearSphere->emissionColor;
 }
 
-
-//#define JITTERING
 //fov是上下夹角
-void render(const std::vector<Sphere> &spheres,const Vec3f &camPosition,const Vec3f &camDir, const unsigned &pixelNumOfWidth,const unsigned &pixelNumOfHeight,const float &fov)
+void render(const std::vector<Sphere> &spheres,
+			const Vec3f &camPosition,
+			const Vec3f &camDir, 
+			const unsigned &pixelNumOfWidth,
+			const unsigned &pixelNumOfHeight,
+			const float &fov,
+			const int &antialiasing = 0,
+			const int &maxDepth = 5)
 {
 	//存储像素颜色，最后输入到PPM文件，所以这个数组和PPM文件是一个映射关系
 	Vec3f *image = new Vec3f[pixelNumOfWidth*pixelNumOfHeight];
@@ -150,24 +156,43 @@ void render(const std::vector<Sphere> &spheres,const Vec3f &camPosition,const Ve
 	for (int i = pixelNumOfHeight - 1; i >=0; --i)			//行
 		for (int j = 0; j < pixelNumOfWidth; ++j)			//列
 		{
-#ifdef JITTERING
-			//抖动反走样
-			int n = 4;
-			for (int p = 0; p < n; ++p)
-				for (int q = 0; q < n; q++)
+			Vec3f color(0);
+			if (antialiasing != 0)
+			{
+				//ray抖动系数
+				Vec2f *rayJittering = new Vec2f[antialiasing*antialiasing];		//只是当作二维数组来使用
+				for (int p = 0; p < antialiasing; ++p)
+					for (int q = 0; q < antialiasing; ++q)
+						rayJittering[p*antialiasing+q] = Vec2f(1.0f * rand() / (RAND_MAX - 1), 1.0f * rand() / (RAND_MAX - 1));
+
+				//面积光抖动系数
+
+				//抖动反走样
+				for (int p = 0; p < antialiasing; ++p)
 				{
-
+					for (int q = 0; q < antialiasing; ++q)
+					{
+						float x = j + (p + rayJittering[p*antialiasing + q].x) / antialiasing;
+						float y = i + (q + rayJittering[p*antialiasing + q].y) / antialiasing;
+						Vec3f primaryRayDir = camera->getCameraRayInWorld(x, y);
+						primaryRayDir.normalize();
+						color += trace(camPosition, primaryRayDir, spheres, 0, maxDepth);
+					}
 				}
-#else
-			//不带反走样
-			//像素坐标转换成屏幕坐标
-			float y = i+0.5f;
-			float x = j+0.5f;
+				color = color / (antialiasing*antialiasing);
+			}
+			else
+			{
+				//不带反走样
+				//像素坐标转换成屏幕坐标
+				float x = j + 0.5f;
+				float y = i + 0.5f;
 
-			Vec3f primaryRayDir = camera->getCameraRayInWorld(x,y);
-			primaryRayDir.normalize();
-			(*pixel++) = trace(camPosition, primaryRayDir, spheres, 0);
-#endif
+				Vec3f primaryRayDir = camera->getCameraRayInWorld(x, y);
+				primaryRayDir.normalize();
+				color = trace(camPosition, primaryRayDir, spheres, 0, maxDepth);
+			}
+			(*pixel++) = color;
 		}
 
 	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "untitled.ppm");
@@ -225,7 +250,7 @@ int main()
 	spheres.push_back(Sphere(Vec3f(-7.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), NULL, 1, 0.0));
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(3)));
-	render(spheres, Vec3f(0, 0, 0), Vec3f(0, 0, -1), 1280, 720, 60);
+	render(spheres, Vec3f(0, 0, 0), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5);
 #elif 1
 	auto width = size_t{ 0 };
 	auto height = size_t{ 0 };

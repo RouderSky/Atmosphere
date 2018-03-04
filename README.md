@@ -17,8 +17,8 @@ ps:该项目创建于vs2015，请使用支持c++11的编译器编译
 - **Diffuse reflection** ：没有考虑 **Sky light**，仅考虑 **Spot light**，且没有进行 **recursion**
 - **Texture Mapping for sphere**：利用球的极坐标计算uv坐标
 - 加入摄像机空间
-### 待完成 ###
 - 实现反走样
+### 待完成 ###
 - 实现软阴影
 - 实现光泽反射
 - 加入模型空间
