@@ -1,7 +1,8 @@
 ﻿#ifndef __INTERPOLATION_H__
 #define __INTERPOLATION_H__
 
-#ifdef WIN32
+#define WIN32
+#ifdef	WIN32
 #include "stdafx.h"
 #endif
 
