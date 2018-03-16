@@ -45,6 +45,8 @@ public:
 	Vec3<T> operator * (const T &r) const{ return Vec3<T>(x * r, y * r, z * r); }
 	friend Vec3<T> operator * (const T &r, const Vec3<T> &v){ return v*r; }
 
+	Vec3<T> operator / (const T &r) const { return Vec3<T>(x / r, y / r, z / r); }
+
 	//逐分量相乘，光线与材料混合
 	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x*v.x, y*v.y, z*v.z); }
 
@@ -85,12 +87,6 @@ public:
 typedef Vec3<float> Vec3f;
 typedef Vec3<int> Vec3i;
 
-
-template<typename T>
-inline T clamp(const T &v, const T &lo, const T &hi)
-{
-	return std::max(lo, std::min(hi, v));
-}
 
 //球面坐标到笛卡尔坐标
 template<typename T>

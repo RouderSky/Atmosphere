@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3E016AA9-D139-4294-A8C1-41658492DD06}</ProjectGuid>
-    <RootNamespace>raytracer</RootNamespace>
+    <ProjectGuid>{95FC1E85-618B-46B3-B35D-4EE542AE11BB}</ProjectGuid>
+    <RootNamespace>MonteCarloMethodsinPractice</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -110,17 +110,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="myRaytracing.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AreaLight.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="Geometry.h" />
-    <ClInclude Include="IOPPM.h" />
-    <ClInclude Include="Matrix44.h" />
-    <ClInclude Include="Sphere.h" />
-    <ClInclude Include="Vector.h" />
+    <ClCompile Include="mcintegration.cpp" />
+    <ClCompile Include="mcsim.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
