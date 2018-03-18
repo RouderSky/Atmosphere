@@ -155,7 +155,7 @@ void render(const std::vector<Sphere> &spheres,
 {
 	//存储像素颜色，最后输入到PPM文件，所以这个数组和PPM文件是一个映射关系
 	Vec3f *image = new Vec3f[pixelNumOfWidth*pixelNumOfHeight];
-	Vec3f *pixel = image;
+	//Vec3f *pixel = image;
 
 	Camera *camera = new Camera(camPosition, camDir, pixelNumOfWidth, pixelNumOfHeight, fov);
 
@@ -200,7 +200,8 @@ void render(const std::vector<Sphere> &spheres,
 				primaryRayDir.normalize();
 				color = trace(camPosition, primaryRayDir, spheres, 0, maxDepth);
 			}
-			(*pixel++) = color;
+			//(*pixel++) = color;
+			image[(pixelNumOfHeight - 1 - i) * pixelNumOfWidth + j] = color;
 		}
 
 	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "untitled.ppm");
@@ -258,7 +259,7 @@ int main()
 	spheres.push_back(Sphere(Vec3f(-7.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), NULL, 1, 0.0));
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(3)));
-	render(spheres, Vec3f(0, 0, 0), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5);
+	render(spheres, Vec3f(0, 0, 0), Vec3f(0, 0, -1), 1280, 720, 60, 2, 5);
 #elif 1
 	auto width = size_t{ 0 };
 	auto height = size_t{ 0 };
