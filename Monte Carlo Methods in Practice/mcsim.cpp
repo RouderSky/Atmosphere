@@ -86,17 +86,13 @@ void spin(double &mu_x, double &mu_y, double &mu_z, const double &g)
 // [/comment]
 void MCSimulation(double *&records, const uint32_t &size)
 {
-    // [comment]
-    // Total number of photon packets
-    // [/comment]
-    uint32_t nphotons = 100000;
-    double scale = 1.0 / nphotons;
+    uint32_t nphotons = 100000;		//Total number of photon packets
     double sigma_a = 1, sigma_s = 2, sigma_t = sigma_a + sigma_s;
     double d = 0.5, slabsize = 0.5, g = 0.75;
     static const short m = 10;
     double Rd = 0, Tt = 0;
     for (int n = 0; n < nphotons; ++n) {
-        double w = 3;			//光线强度
+        double w = 1;
         double x = 0, y = 0, z = 0, mux = 0, muy = 0, muz = 1;
         while (w != 0) {
             double s = -log(RAND_0_1) / sigma_t;
@@ -146,28 +142,29 @@ void MCSimulation(double *&records, const uint32_t &size)
         }
     }
 #ifdef ONED
-    printf("Rd %f Tt %f\n", Rd * scale, Tt * scale);
+    printf("Rd %f Tt %f\n", Rd / nphotons, Tt / nphotons);		//这里体现了门特卡洛积分，随着nphotons的提高，这个比例越来越接近真正的比例
 #endif
 }
 
 int main(int argc, char **argv)
 {
 	srand(13);
+
     double *records = NULL;
     const uint32_t size = 512;
     records = new double[size * size * 3];
     memset(records, 0x0, sizeof(double) * size * size * 3);
-    uint32_t npasses = 1;
 
-    float *pixels = new float[size * size]; // image
 	//渐进式渲染
-    while (npasses < 256) {
+	uint32_t npasses = 1;
+    while (npasses < 32) {
         MCSimulation(records, size);		//records中的数据会不断叠加
 		//for (int i = 0; i < size * size; ++i) pixels[i] = records[i] / npasses;
         //display(pixels);
         printf("num passes: %d\n", npasses);
 		npasses++;
     }
+	float *pixels = new float[size * size]; // image
 	for (int i = 0; i < size * size; ++i) pixels[i] = records[i] / npasses;
 
     // save image to file

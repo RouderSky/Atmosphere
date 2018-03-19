@@ -279,7 +279,7 @@ void render(const std::vector<Sphere> &spheres,
 
 	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "untitled2.ppm");
 
-	delete camera;
+	delete[] camera;
 	delete[] image;
 }
 
@@ -337,10 +337,6 @@ int main()
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(5)));
 
 	render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 640, 60, 4, 5, true, 2);		//这个参数会崩
-	//去掉渐进渲染进行压力测试
-	//去掉新漫发射方法进行压力测试
-	//如果还是崩了，那就将两个方法都去掉，进行压力测试
-	//如果还是崩了，回退代码，进行压力测试
 #elif 0
 	auto width = size_t{ 0 };
 	auto height = size_t{ 0 };

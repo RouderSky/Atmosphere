@@ -20,7 +20,7 @@ void out2PPM(Vec3f *image, int pixelNumOfWidth, int pixelNumOfHeight, std::strin
 	std::ofstream ofs(fileName, std::ios::out | std::ios::binary);
 	ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight << "\n255\n";
 	//ofs << "P6\n" << pixelNumOfWidth << " " << pixelNumOfHeight;
-	for (unsigned i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
+	for (int i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
 	{
 		//四色五入
 		ofs << (unsigned char)(clamp(image[i].x, 0.f, 1.f) * 255 + 0.5)
