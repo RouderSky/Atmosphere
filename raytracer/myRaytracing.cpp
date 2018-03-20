@@ -6,6 +6,7 @@
 //#include <fstream>
 //#include <vector>
 #include <iostream>
+#include <ctime>
 //#include <cassert>
 //#include <windows.h>
 //#include <string>
@@ -46,7 +47,7 @@ Vec3f trace(
 	const int &depth,
 	const int &maxDepth)
 { 
-	std::cout << depth << " ";
+	//std::cout << depth << " ";
 	float minHitDist = INFINITY;			//rayorig到最靠近的平面的距离
 	const Sphere* nearSphere = NULL;		//ray击中的最靠近的球体
 	for (size_t i = 0; i < spheres.size(); ++i)
@@ -180,10 +181,6 @@ Vec3f trace(
 			Vec3f diffuse = trace(phit + nhit*bias, diffuseDir, spheres, depth + 1, maxDepth);		//只要有这一句就会崩
 			color += 0.5 * diffuse * nearSphere->getSurfaceColor(uv);
 		}
-		else
-		{
-			return Vec3f(0, 0, 0);
-		}
 #endif
 	}
 
@@ -260,7 +257,7 @@ void render(const std::vector<Sphere> &spheres,
 
 				//(*pixel++) = color;
 				image[(pixelNumOfHeight - 1 - i) * pixelNumOfWidth + j] += color;
-				std::cout << "pa:" << pass + 1 << " " << "p:" << 100.0f * ((pixelNumOfHeight - 1 - i) * pixelNumOfWidth + j) / (pixelNumOfWidth * pixelNumOfHeight) << std::endl;
+				//std::cout << "pa:" << pass + 1 << " " << "p:" << 100.0f * ((pixelNumOfHeight - 1 - i) * pixelNumOfWidth + j) / (pixelNumOfWidth * pixelNumOfHeight) << std::endl;
 			}
 
 		++pass;
@@ -277,7 +274,7 @@ void render(const std::vector<Sphere> &spheres,
 		}
 	}
 
-	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "untitled2.ppm");
+	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "untitled.ppm");
 
 	delete camera;
 	delete[] image;
@@ -302,8 +299,8 @@ Vec3f readColorFromPPM(const std::string &fileName, const Vec2f &uv)
 	static auto maxValue = size_t{ 0 };
 	static auto pixel_data = readRgbImage(fileName, &width, &height, &maxValue);
 
-	int px = uv.x * width;
-	int py = uv.y * height;
+	int px = uv.x * (width - 1);
+	int py = uv.y * (height - 1);
 
 	Vec3f color;
 	color.x = 1.f * (*pixel_data)[py*width * 3 + px * 3] / maxValue;
@@ -321,6 +318,7 @@ Vec3f textureFunc2(const Vec2f &uv)
 int main()
 {
 #if 1
+	//srand(time(0));
 	srand(13);
 	std::vector<Sphere> spheres;
 	//object
@@ -336,11 +334,7 @@ int main()
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(5)));
 
-	render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 640, 60, 4, 5, true, 2);		//这个参数会崩
-	//去掉渐进渲染进行压力测试
-	//去掉新漫发射方法进行压力测试
-	//如果还是崩了，那就将两个方法都去掉，进行压力测试
-	//如果还是崩了，回退代码，进行压力测试
+	render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, true, 2);
 #elif 0
 	auto width = size_t{ 0 };
 	auto height = size_t{ 0 };

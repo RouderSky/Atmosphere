@@ -1,4 +1,4 @@
-#ifndef _SPHERE_H__
+ï»¿#ifndef _SPHERE_H__
 #define _SPHERE_H__
 
 #include "Vector.h"
@@ -8,13 +8,13 @@ class Sphere
 public:
 	Vec3f center;
 	float radius, radius2;
-	Vec3f diffuseColor;				//Âş·´ÉäÑÕÉ«£¬¼¸ºõËùÓĞÍâÀ´¹âÏß¶¼ÒªÓëÕâ¸öÑÕÉ«½»»¥ÈÚºÏ
+	Vec3f diffuseColor;				//æ¼«åå°„é¢œè‰²ï¼Œå‡ ä¹æ‰€æœ‰å¤–æ¥å…‰çº¿éƒ½è¦ä¸è¿™ä¸ªé¢œè‰²äº¤äº’èåˆ
 	bool hasTexture;
 	Vec3f(*textureColor)(const Vec2f&);
-	Vec3f emissionColor;			//×Ô·¢¹âÑÕÉ«£¬ÎïÌå±í²ãµÄÒ»²ã¹âÏß£¬¹âÏßµÄ·½Ïò¶¼ÊÇ·¨ÏßµÄ·½Ïò
-	float transparency;				//Í¸Ã÷¶È
-	float reflection;				//¾µÃæ·´Éä¶È
-									//»¹¿ÉÒÔ¼ÓÉÏÒ»¸öÕÛÉäÂÊÊôĞÔ£¬ÏßÃæµÄÇòÌåÈ«²¿Í³Ò»Îª1.1ÁË
+	Vec3f emissionColor;			//è‡ªå‘å…‰é¢œè‰²ï¼Œç‰©ä½“è¡¨å±‚çš„ä¸€å±‚å…‰çº¿ï¼Œå…‰çº¿çš„æ–¹å‘éƒ½æ˜¯æ³•çº¿çš„æ–¹å‘
+	float transparency;				//é€æ˜åº¦
+	float reflection;				//é•œé¢åå°„åº¦
+									//è¿˜å¯ä»¥åŠ ä¸Šä¸€ä¸ªæŠ˜å°„ç‡å±æ€§ï¼Œçº¿é¢çš„çƒä½“å…¨éƒ¨ç»Ÿä¸€ä¸º1.1äº†
 
 	Sphere(
 		const Vec3f &c,
@@ -37,8 +37,8 @@ public:
 			return diffuseColor;
 	}
 
-	//¼ÆËãµãcenterµ½Ö±ÏßraydirµÄ¾àÀëd£¬Èç¹ûdĞ¡ÓÚµÈÓÚradius£¬ÄÇÃ´¾ÍÏà½»£»
-	//×îºóÒª·µ»ØÊÇ·ñÏà½»£¬»¹ÒªÍ¨¹ıÒıÓÃ·µ»ØÏà½»µãÓërayorigµÄ¾àÀë(×¢Òârayorig¿ÉÄÜÔÚÎïÌåÄÚ²¿£¬Ò²¿ÉÄÜÔÚÎïÌåÍâ²¿)
+	//è®¡ç®—ç‚¹centeråˆ°ç›´çº¿raydirçš„è·ç¦»dï¼Œå¦‚æœdå°äºç­‰äºradiusï¼Œé‚£ä¹ˆå°±ç›¸äº¤ï¼›
+	//æœ€åè¦è¿”å›æ˜¯å¦ç›¸äº¤ï¼Œè¿˜è¦é€šè¿‡å¼•ç”¨è¿”å›ç›¸äº¤ç‚¹ä¸rayorigçš„è·ç¦»(æ³¨æ„rayorigå¯èƒ½åœ¨ç‰©ä½“å†…éƒ¨ï¼Œä¹Ÿå¯èƒ½åœ¨ç‰©ä½“å¤–éƒ¨)
 	bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t)const
 	{
 		Vec3f l = center - rayorig;
@@ -52,24 +52,25 @@ public:
 		float t0 = projectOflToRaydir - offset;
 		float t1 = projectOflToRaydir + offset;
 
-		t = t0 < 0 ? t1 : t0;		//¸ù¾İ·¢ÉäµãÔÚ²»ÔÚÎïÌåÄÚ²¿À´È·¶¨»÷ÖĞ¾àÀë
+		t = t0 < 0 ? t1 : t0;		//æ ¹æ®å‘å°„ç‚¹åœ¨ä¸åœ¨ç‰©ä½“å†…éƒ¨æ¥ç¡®å®šå‡»ä¸­è·ç¦»
 		return true;
 	}
 
 	void getSurfaceData(const Vec3f &raydir, const Vec3f &Phit, Vec3f &Nhit, bool &inside, Vec2f &uv) const
 	{
-		Nhit = Phit - center;				//ray»÷ÖĞµãµÄÇòÌåÍâ·¨Ïß
+		Nhit = Phit - center;				//rayå‡»ä¸­ç‚¹çš„çƒä½“å¤–æ³•çº¿
 		Nhit.normalize();
-		inside = false;							//rayµÄ·¢ÉäµãÊÇ²»ÊÇÔÚÄÚ²¿
+		inside = false;							//rayçš„å‘å°„ç‚¹æ˜¯ä¸æ˜¯åœ¨å†…éƒ¨
 		if (raydir.dot(Nhit) > 0)
 		{
 			Nhit = -Nhit;
 			inside = true;
 		}
 
-		//uv×ø±êÊÇÔÚÄ£ĞÍ¿Õ¼äÏÂ¼ÆËãµÄ£¬ÓÉÓÚÕâ¸ö³ÌĞò»¹Ã»ÓĞÒıÈëÄ£ĞÍ¿Õ¼ä£¬ËùÒÔÔİÊ±ÓÃ»÷ÖĞ·¨ÏßÀ´´úÌæ
-		//x´ú±íÁĞ£¬y´ú±íĞĞ
-		//upÖáÊÇy
+		//uvåæ ‡æ˜¯åœ¨æ¨¡å‹ç©ºé—´ä¸‹è®¡ç®—çš„ï¼Œç”±äºè¿™ä¸ªç¨‹åºè¿˜æ²¡æœ‰å¼•å…¥æ¨¡å‹ç©ºé—´ï¼Œæ‰€ä»¥æš‚æ—¶ç”¨å‡»ä¸­æ³•çº¿æ¥ä»£æ›¿
+		//ä½†æ˜¯è¿™é‡Œçš„çš„ä¸–ç•Œåæ ‡æ˜¯å³æ‰‹ç³»çš„ï¼Œè®¡ç®—æ­£ç¡®çš„UVåæ ‡éœ€è¦ä½¿ç”¨å·¦æ‰‹ç³»åæ ‡ï¼Œä¹Ÿå°±æ˜¯è¯´éœ€è¦å¼•å…¥æ¨¡å‹ç©ºé—´
+		//xä»£è¡¨åˆ—ï¼Œyä»£è¡¨è¡Œ
+		//upè½´æ˜¯y
 		//uv.x = (1 + atan2(Nhit.z, Nhit.x) / M_PI) * 0.5;
 		//uv.y = acosf(Nhit.y) / M_PI;
 		uv.x = (M_PI+sphericalPhi(Nhit)) / (2.0 * M_PI);

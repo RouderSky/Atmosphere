@@ -111,7 +111,7 @@ template<typename T>
 inline T sphericalPhi(Vec3<T> &v)		//原本有const的
 {
 	//atan2(Nhit.z, Nhit.x)
-	T p = atan2(v[2], v[0]);
+	T p = atan2(v[2], v[0]);			//..........................
 	//由于角度一旦大于180度，atan会自动返回对应负角度；所以，为了避免混乱，这里手动统一，无论怎么样，都会返回一个正的角度；
 	//原本return (p < 0) ? p + 2 * M_PI : p;		
 	return p;
