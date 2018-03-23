@@ -15,6 +15,9 @@
 #include "Sphere.h"
 #include "Camera.h"
 
+//生成[0,1)的随机数
+#define RAND_0_1 rand() % RAND_MAX / float(RAND_MAX)
+
 //Fresnel equation
 float fresnelMix(const float &a, const float &b, const float &mix)
 {
@@ -26,7 +29,7 @@ Vec3f RandomInUnitSphere()
 	Vec3f p;
 	do
 	{
-		p = 2.0f * Vec3f((rand() % 100 / float(100)), (rand() % 100 / float(100)), (rand() % 100 / float(100))) - Vec3f(1.0f, 1.0f, 1.0f);
+		p = 2.0f * Vec3f(RAND_0_1, RAND_0_1, RAND_0_1) - Vec3f(1.0f, 1.0f, 1.0f);
 	} while (p.dot(p) >= 1.0f);
 
 	return p;
@@ -178,7 +181,7 @@ Vec3f trace(
 			//每次吸收50%的能量
 			Vec3f diffuseDir = target - phit;
 			diffuseDir.normalize();
-			Vec3f diffuse = trace(phit + nhit*bias, diffuseDir, spheres, depth + 1, maxDepth);		//只要有这一句就会崩
+			Vec3f diffuse = trace(phit + nhit*bias, diffuseDir, spheres, depth + 1, maxDepth);
 			color += 0.5 * diffuse * nearSphere->getSurfaceColor(uv);
 		}
 #endif
@@ -223,7 +226,7 @@ void render(const std::vector<Sphere> &spheres,
 					Vec2f *rayJittering = new Vec2f[antialiasing*antialiasing];		//只是当作二维数组来使用
 					for (int p = 0; p < antialiasing; ++p)
 						for (int q = 0; q < antialiasing; ++q)
-							rayJittering[p*antialiasing + q] = Vec2f(1.0f * rand() / (RAND_MAX - 1), 1.0f * rand() / (RAND_MAX - 1));
+							rayJittering[p*antialiasing + q] = Vec2f(RAND_0_1, RAND_0_1);		//为什么要减一？？？
 
 					//面积光抖动系数
 
@@ -359,7 +362,8 @@ int main()
 	delete[] colors;
 
 #else
-
+	std::cout << RAND_MAX;
+	std::cin.get();
 #endif
 
 	return 0;
