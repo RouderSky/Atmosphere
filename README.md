@@ -17,10 +17,13 @@ ps:该项目创建于vs2015，请使用支持c++11的编译器编译
 - **Specular reflection** 和 **Refraction**：利用 **Fresnel equation** 
 - **Texture Mapping for sphere**：利用球的极坐标计算uv坐标
 - **camera space**
-- **anti-aliasing**
+- **Quasi Monte Carlo**
+	- **jittering**
+	- **no important sampling**
 ### 待完成 ###
-- 光泽反射
 - Model Space
+- important sampling
+- 光泽反射
 - Polygon Mesh
 - Motion Blur
 - Defocus Blur
