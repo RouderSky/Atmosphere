@@ -69,7 +69,7 @@ public:
 	T length2() const{ return x*x + y*y + z*z; }
 
 	//这个计算方法不是最快的
-	T length() { return sqrt(length2());}
+	T length() const { return sqrt(length2());}
 
 	//返回的是引用，而且提供了两个版本
 	const T& operator [] (uint8_t i) const
@@ -101,20 +101,21 @@ Vec3<T> sphericalToCartesian(const T &theta, const T &phi)
 //笛卡尔坐标到球面坐标
 //输入的向量一定要是一个单位向量
 template<typename T>
-inline T sphericalTheta(Vec3<T> &v)		//原本有const的
+inline T sphericalTheta(const Vec3<T> &v)
 {
 	return acos(clamp<T>(v[1], -1, 1));		//为了安全考虑，避免v[2]数据存在微小的误差
 }
 
 //笛卡尔坐标到球面坐标
 template<typename T>
-inline T sphericalPhi(Vec3<T> &v)		//原本有const的
+inline T sphericalPhi(const Vec3<T> &v)
 {
 	//atan2(Nhit.z, Nhit.x)
-	T p = atan2(v[2], v[0]);			//..........................
+	T p = atan2(-v[2], v[0]);
 	//由于角度一旦大于180度，atan会自动返回对应负角度；所以，为了避免混乱，这里手动统一，无论怎么样，都会返回一个正的角度；
-	//原本return (p < 0) ? p + 2 * M_PI : p;		
-	return p;
+	//原本
+	return (p < 0) ? p + 2 * M_PI : p;		
+	//return p;
 }
 
 ///////////////////////////////////////////////////////////////

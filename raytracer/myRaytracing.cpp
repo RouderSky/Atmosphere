@@ -337,7 +337,7 @@ int main()
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(5)));
 
-	render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, true, 2);
+	render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 2, 5, true, 1);
 #elif 0
 	auto width = size_t{ 0 };
 	auto height = size_t{ 0 };
