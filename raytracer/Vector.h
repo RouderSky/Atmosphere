@@ -21,10 +21,11 @@ public:
 	T x, y, z;
 
 	Vec3() : x(T(0)), y(T(0)), z(T(0)){}
-	Vec3(const T &xx) : x(xx), y(xx), z(xx){}		//调用时即使参数类型与T不匹配也可以，访问xx会自动强转
+	Vec3(const T &xx) : x(xx), y(xx), z(xx){}		//调用时即使参数类型与T不匹配也可以，访问xx会自动强转；不安全
 	Vec3(const T &xx, const T &yy, const T &zz) :x(xx), y(yy), z(zz){}
+	Vec3(const Vec3<T> &v) :x(v.x), y(v.y), z(v.z) {}
 
-	Vec3<T>& normalize()							//返回引用
+	void normalize()							//返回引用
 	{
 		T len = length();
 		if (len > 0)
@@ -32,21 +33,24 @@ public:
 			T invLen = 1 / len;						//除法耗费的性能比乘法要大，所以先处理一下
 			x *= invLen, y *= invLen, z *= invLen;
 		}
-		return *this;								//这个return多此一举，因为如果外部可以调用这个函数，证明了外面已经拿到了这个向量的本体了，返回完全是多余
 	}
-	
+
+	Vec3<T>& operator = (const Vec3<T> &v) { x = v.x, y = v.y, z = v.z; return *this; }
+	bool operator == (const Vec3<T> &v) const{ return x == v.x&&y == v.y&&z == v.z; }
+	bool operator != (const Vec3<T> &v) const{ return x != v.x&&y != v.y&&z != v.z; }
+
+	Vec3<T> operator - () const { return Vec3<T>(-x, -y, -z); }
+
 	Vec3<T> operator + (const Vec3<T> &v) const{ return Vec3<T>(x + v.x, y + v.y, z + v.z); }
 	Vec3<T> operator - (const Vec3<T> &v) const{ return Vec3<T>(x - v.x, y - v.y, z - v.z); }
-	Vec3<T> operator - () const { return Vec3<T>(-x, -y, -z); }
+	Vec3<T> operator * (const T &r) const { return Vec3<T>(x * r, y * r, z * r); }
+	friend Vec3<T> operator * (const T &r, const Vec3<T> &v) { return v*r; }
+	Vec3<T> operator / (const T &r) const { return Vec3<T>(x / r, y / r, z / r); }
 
 	Vec3<T>& operator +=(const Vec3<T> &v) { x += v.x, y += v.y, z += v.z; return *this; }
 	Vec3<T>& operator -=(const Vec3<T> &v) { x -= v.x, y -= v.y, z -= v.z; return *this; }
+	Vec3<T>& operator *= (const T &r) { x *= r, y *= r, z *= r; return *this; }
 	Vec3<T>& operator /= (const T &r) { x /= r, y /= r, z /= r; return *this; }
-
-	Vec3<T> operator * (const T &r) const{ return Vec3<T>(x * r, y * r, z * r); }
-	friend Vec3<T> operator * (const T &r, const Vec3<T> &v){ return v*r; }
-
-	Vec3<T> operator / (const T &r) const { return Vec3<T>(x / r, y / r, z / r); }
 
 	//逐分量相乘，光线与材料混合
 	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x*v.x, y*v.y, z*v.z); }
@@ -111,7 +115,7 @@ template<typename T>
 inline T sphericalPhi(const Vec3<T> &v)
 {
 	//atan2(Nhit.z, Nhit.x)
-	T p = atan2(-v[2], v[0]);
+	T p = atan2(-v[2], v[0]);		//由于世界坐标是右手系，而计算球面坐标用的是左手系，所以需要对z数值取反...................................
 	//由于角度一旦大于180度，atan会自动返回对应负角度；所以，为了避免混乱，这里手动统一，无论怎么样，都会返回一个正的角度；
 	//原本
 	return (p < 0) ? p + 2 * M_PI : p;		

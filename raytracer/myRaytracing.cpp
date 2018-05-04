@@ -82,7 +82,8 @@ Vec3f trace(
 #else
 		//渐变的背景色，之所以使用raydir，是因为我们将背景当作无限远的天空盒来处理
 		Vec3f raydir_copy = raydir;
-		float t = 0.5f*(raydir_copy.normalize().y + 1.0f);
+		raydir_copy.normalize();
+		float t = 0.5f*(raydir_copy.y + 1.0f);
 		//(1-t)*白色+t*蓝色，结果是一个蓝白的渐变
 		return (1.0f - t)*BACKGROUP_LIGHT1 + t*BACKGROUP_LIGHT2;
 #endif
@@ -126,6 +127,7 @@ Vec3f trace(
 			refraction = trace(phit - nhit*bias, refrdir, spheres, depth + 1, maxDepth);
 		}
 
+		//这个菲涅尔混合好像不太对.................
 		//计算出 菲涅尔 混合值，确定折射光与反射光的叠加比例
 		float facingration = -raydir.dot(nhit);
 		float fresneleffect = fresnelMix(pow(1 - facingration, 3), 1, 0.1);
@@ -337,7 +339,15 @@ int main()
 	//light
 	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(5)));
 
-	render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 2, 5, true, 1);
+	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 640, 360, 60, 0, 1, false, 1);		//5s
+	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 0, 1, false, 1);		//15s
+	render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 0, 5, false, 1);		//30s
+	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 90, 0, 5, false, 1);		//23s
+	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 1);		//7min46s
+	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 3);		//22min10s
+	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 3);			//29min50s
+	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, true, 3);		//30min30s
+
 #elif 0
 	auto width = size_t{ 0 };
 	auto height = size_t{ 0 };

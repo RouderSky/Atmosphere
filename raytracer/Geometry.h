@@ -1,5 +1,9 @@
-#ifndef _GEOMETRY_H__
+ï»¿#ifndef _GEOMETRY_H__
 #define _GEOMETRY_H__
+
+//ä½œåºŸ
+
+/*
 
 #include <algorithm>
 
@@ -73,7 +77,7 @@ public:
 	}
 	Vec3<T> operator * (const T &f) const { return Vec3<T>(x*f, y*f, z*f); }
 	friend Vec3<T> operator * (const T &f, const Vec3<T> &v) { return v*f; }
-	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x*v.x, y*v.y, z*v.z); }	//Öð·ÖÁ¿Ïà³Ë£¬¹âÏßÓë²ÄÁÏ»ìºÏ
+	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x*v.x, y*v.y, z*v.z); }
 	T dot(const Vec3<T> &v) const { return x*v.x + y*v.y + z*v.z; }
 	Vec3<T> operator - (const Vec3<T> &v) const { return Vec3<T>(x - v.x, y - v.y, z - v.z); }
 	Vec3<T> operator + (const Vec3<T> &v) const { return Vec3<T>(x + v.x, y + v.y, z + v.z); }
@@ -90,5 +94,7 @@ public:
 };
 
 typedef Vec3<float> Vec3f;
+
+*/
 
 #endif
