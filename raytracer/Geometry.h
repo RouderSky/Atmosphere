@@ -1,9 +1,8 @@
 ﻿#ifndef _GEOMETRY_H__
 #define _GEOMETRY_H__
 
-//作废
-
 /*
+//作废
 
 #include <algorithm>
 
@@ -96,5 +95,21 @@ public:
 typedef Vec3<float> Vec3f;
 
 */
+
+class Geometry 
+{
+public:
+	Vec3f diffuseColor;				//漫反射颜色，几乎所有外来光线都要与这个颜色交互融合
+	bool hasTexture;
+	Vec3f(*textureColor)(const Vec2f&);
+	Vec3f emissionColor;			//自发光颜色，物体表层的一层光线，光线的方向都是法线的方向
+	float transparency;				//透明度
+	float reflection;				//镜面反射度
+									//还可以加上一个折射率属性，线面的球体全部统一为1.1了
+
+	virtual Vec3f getSurfaceColor(Vec2f uv) const = 0;
+	virtual bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t) const = 0;
+	virtual void getSurfaceData(const Vec3f &raydir, const Vec3f &Phit, Vec3f &Nhit, bool &inside, Vec2f &uv) const = 0;
+};
 
 #endif

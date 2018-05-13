@@ -46,16 +46,16 @@ Vec3f RandomInUnitSphere()
 Vec3f trace(
 	const Vec3f &rayorig,
 	const Vec3f &raydir,
-	const std::vector<Sphere> &spheres,
+	const std::vector<Geometry*> &geometrys,
 	const int &depth,
 	const int &maxDepth)
 { 
 	//std::cout << depth << " ";
 	float minHitDist = INFINITY;			//rayorig到最靠近的平面的距离
-	const Sphere* nearSphere = NULL;		//ray击中的最靠近的球体
-	for (size_t i = 0; i < spheres.size(); ++i)
+	const Geometry* nearSphere = NULL;		//ray击中的最靠近的球体
+	for (size_t i = 0; i < geometrys.size(); ++i)
 	{
-		if (i >= spheres.size() || i < 0) {
+		if (i >= geometrys.size() || i < 0) {
 			std::cout << "vetcor下标越界" << std::endl; std::cin.get(); 
 			std::cin.get();
 			std::cin.get();
@@ -64,12 +64,12 @@ Vec3f trace(
 			std::cin.get();
 		}
 		float t = INFINITY;
-		if (spheres[i].intersect(rayorig, raydir, t))
+		if (geometrys[i]->intersect(rayorig, raydir, t))
 		{
 			if (t < minHitDist)
 			{
 				minHitDist = t;
-				nearSphere = &spheres[i];
+				nearSphere = geometrys[i];
 			}
 		}
 	}
@@ -110,7 +110,7 @@ Vec3f trace(
 		//只要是折射都会有镜面反射
 		Vec3f refldir = raydir - nhit * 2 * raydir.dot(nhit);
 		refldir.normalize();
-		Vec3f reflection = trace(phit + nhit*bias, refldir, spheres, depth + 1, maxDepth);
+		Vec3f reflection = trace(phit + nhit*bias, refldir, geometrys, depth + 1, maxDepth);
 
 		//折射
 		Vec3f refraction;
@@ -124,7 +124,7 @@ Vec3f trace(
 			Vec3f refrdir = (niCmpT0nt*cosi - cost)*nhit + niCmpT0nt*raydir;
 			refldir.normalize();
 
-			refraction = trace(phit - nhit*bias, refrdir, spheres, depth + 1, maxDepth);
+			refraction = trace(phit - nhit*bias, refrdir, geometrys, depth + 1, maxDepth);
 		}
 
 		//这个菲涅尔混合好像不太对.................
@@ -183,7 +183,7 @@ Vec3f trace(
 			//每次吸收50%的能量
 			Vec3f diffuseDir = target - phit;
 			diffuseDir.normalize();
-			Vec3f diffuse = trace(phit + nhit*bias, diffuseDir, spheres, depth + 1, maxDepth);
+			Vec3f diffuse = trace(phit + nhit*bias, diffuseDir, geometrys, depth + 1, maxDepth);
 			color += 0.5 * diffuse * nearSphere->getSurfaceColor(uv);
 		}
 #endif
@@ -193,7 +193,7 @@ Vec3f trace(
 }
 
 //fov是上下夹角
-void render(const std::vector<Sphere> &spheres,
+void render(const std::vector<Geometry*> &geometrys,
 			const Vec3f &camPosition,
 			const Vec3f &camDir, 
 			const unsigned &pixelNumOfWidth,
@@ -219,6 +219,7 @@ void render(const std::vector<Sphere> &spheres,
 		//确定每个像素的颜色，这个循环可以并行计算
 		//注意：PPM文件必须按照从上到下、从左到右的顺序输入一幅图像的信息
 		for (int i = pixelNumOfHeight - 1; i >= 0; --i)			//行
+		{
 			for (int j = 0; j < pixelNumOfWidth; ++j)			//列
 			{
 				Vec3f color(0);
@@ -241,7 +242,7 @@ void render(const std::vector<Sphere> &spheres,
 							float y = i + (q + rayJittering[p*antialiasing + q].y) / antialiasing;
 							Vec3f primaryRayDir = camera->getCameraRayInWorld(x, y);
 							primaryRayDir.normalize();
-							color += trace(camPosition, primaryRayDir, spheres, 0, maxDepth);
+							color += trace(camPosition, primaryRayDir, geometrys, 0, maxDepth);
 						}
 					}
 					color = color / (antialiasing*antialiasing);
@@ -257,29 +258,33 @@ void render(const std::vector<Sphere> &spheres,
 
 					Vec3f primaryRayDir = camera->getCameraRayInWorld(x, y);
 					primaryRayDir.normalize();
-					color = trace(camPosition, primaryRayDir, spheres, 0, maxDepth);
+					color = trace(camPosition, primaryRayDir, geometrys, 0, maxDepth);
 				}
 
 				//(*pixel++) = color;
 				image[(pixelNumOfHeight - 1 - i) * pixelNumOfWidth + j] += color;
-				//std::cout << "pa:" << pass + 1 << " " << "p:" << 100.0f * ((pixelNumOfHeight - 1 - i) * pixelNumOfWidth + j) / (pixelNumOfWidth * pixelNumOfHeight) << std::endl;
+				//std::cout << "pass:" << pass + 1 << " " << "p:" << 100.0f * ((pixelNumOfHeight - 1 - i) * pixelNumOfWidth + j) / (pixelNumOfWidth * pixelNumOfHeight) << std::endl;
 			}
-
+			std::cout << "pass:" << pass + 1 << " " << "p:" << 100.0f * (pixelNumOfHeight - 1 - i) / pixelNumOfHeight << std::endl;
+		}
 		++pass;
+
+		Vec3f *tempImage = new Vec3f[pixelNumOfWidth*pixelNumOfHeight];
+		for (int i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
+		{
+			tempImage[i] = image[i] / pass;
+			if (isGammaFix)
+			{
+				//gamma修正
+				//修正应该发生在pass中，还是保存图像前？？？
+				tempImage[i] = Vec3f(sqrt(tempImage[i].x), sqrt(tempImage[i].y), sqrt(tempImage[i].z));			//图像变好看了，什么原理？？？
+			}
+		}
+
+		out2PPM(tempImage, pixelNumOfWidth, pixelNumOfHeight, "untitled.ppm");
 	} 
 
-	for (int i = 0; i < pixelNumOfWidth*pixelNumOfHeight; ++i)
-	{
-		image[i] /= maxPass;
-		if (isGammaFix)
-		{
-			//gamma修正
-			//修正应该发生在pass中，还是保存图像前？？？
-			image[i] = Vec3f(sqrt(image[i].x), sqrt(image[i].y), sqrt(image[i].z));			//图像变好看了，什么原理？？？
-		}
-	}
 
-	out2PPM(image, pixelNumOfWidth, pixelNumOfHeight, "untitled.ppm");
 
 	delete camera;
 	delete[] image;
@@ -325,28 +330,28 @@ int main()
 #if 1
 	//srand(time(0));
 	srand(13);
-	std::vector<Sphere> spheres;
+	std::vector<Geometry*> geometrys;
 	//object
-	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.8, 0.8, 0.8), NULL, 0, 0, 0.0));
-	spheres.push_back(Sphere(Vec3f(0.0, 1, -20), 4, Vec3f(1.00, 0.32, 0.36), NULL, 0, 0.5));
-	spheres.push_back(Sphere(Vec3f(9.0, 2.8, -17), 5, Vec3f(0.f), textureFunc2, 0));
-	spheres.push_back(Sphere(Vec3f(-5.0, 4.0, -30), 4, Vec3f(0.36, 0.80, 0.36), NULL, 0, 0));
-	//spheres.push_back(Sphere(Vec3f(6.0, 0, -15), 2, Vec3f(0.90, 0.76, 0.46), NULL, 1, 0.0));
-	spheres.push_back(Sphere(Vec3f(5.0, 1, -25), 3, Vec3f(0.90, 0.76, 0.46), NULL, 1, 0.0));
-	spheres.push_back(Sphere(Vec3f(-7.5, 1, -15), 3, Vec3f(1, 1, 1), NULL, 1, 0.0));
-	spheres.push_back(Sphere(Vec3f(-3, -2, -11), 0.5, Vec3f(1.0), NULL, 0, 1.0));
-	spheres.push_back(Sphere(Vec3f(4, -2.3, -13), 0.5, Vec3f(0.90,0.3,0.07), NULL));
+	geometrys.push_back(new Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.8, 0.8, 0.8), NULL, 0, 0, 0.0));
+	geometrys.push_back(new Sphere(Vec3f(0.0, 1, -20), 4, Vec3f(1.00, 0.32, 0.36), NULL, 0, 0.5));
+	geometrys.push_back(new Sphere(Vec3f(9.0, 2.8, -17), 5, Vec3f(0.f), textureFunc2, 0));
+	geometrys.push_back(new Sphere(Vec3f(-5.0, 4.0, -30), 4, Vec3f(0.36, 0.80, 0.36), NULL, 0, 0));
+	//geometrys.push_back(new Sphere(Vec3f(6.0, 0, -15), 2, Vec3f(0.90, 0.76, 0.46), NULL, 1, 0.0));
+	geometrys.push_back(new Sphere(Vec3f(5.0, 1, -25), 3, Vec3f(0.90, 0.76, 0.46), NULL, 1, 0.0));
+	geometrys.push_back(new Sphere(Vec3f(-7.5, 1, -15), 3, Vec3f(1, 1, 1), NULL, 1, 0.0));
+	geometrys.push_back(new Sphere(Vec3f(-3, -2, -11), 0.5, Vec3f(1.0), NULL, 0, 1.0));
+	geometrys.push_back(new Sphere(Vec3f(4, -2.3, -13), 0.5, Vec3f(0.90,0.3,0.07), NULL));
 	//light
-	spheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(5)));
+	geometrys.push_back(new Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), NULL, 0, 0.0, Vec3f(5)));
 
-	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 640, 360, 60, 0, 1, false, 1);		//5s
-	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 0, 1, false, 1);		//15s
-	render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 0, 5, false, 1);		//30s
-	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 90, 0, 5, false, 1);		//23s
-	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 1);		//7min46s
-	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 3);		//22min10s
-	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 3);			//29min50s
-	//render(spheres, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, true, 3);		//30min30s
+	//render(geometrys, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 640, 360, 60, 0, 1, false, 1);		//5s
+	//render(geometrys, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 0, 1, false, 1);		//15s
+	//render(geometrys, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 0, 5, false, 1);		//30s
+	//render(geometrys, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 90, 0, 5, false, 1);		//23s
+	render(geometrys, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 1);		//7min46s
+	//render(geometrys, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 3);		//22min10s
+	//render(geometrys, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, false, 3);		//29min50s
+	//render(geometrys, Vec3f(0, 2.3, -2), Vec3f(0, 0, -1), 1280, 720, 60, 4, 5, true, 3);		//30min30s
 
 #elif 0
 	auto width = size_t{ 0 };

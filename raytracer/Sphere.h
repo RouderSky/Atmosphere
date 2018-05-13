@@ -2,20 +2,13 @@
 #define _SPHERE_H__
 
 #include "Vector.h"
+#include "Geometry.h"
 
-class Sphere
+class Sphere:public Geometry
 {
 public:
 	Vec3f center;
 	float radius, radius2;
-	Vec3f diffuseColor;				//漫反射颜色，几乎所有外来光线都要与这个颜色交互融合
-	bool hasTexture;
-	Vec3f(*textureColor)(const Vec2f&);
-	Vec3f emissionColor;			//自发光颜色，物体表层的一层光线，光线的方向都是法线的方向
-	float transparency;				//透明度
-	float reflection;				//镜面反射度
-									//还可以加上一个折射率属性，线面的球体全部统一为1.1了
-
 	Sphere(
 		const Vec3f &c,
 		const float &r,
@@ -23,13 +16,18 @@ public:
 		Vec3f(*tex)(const Vec2f&) = NULL,
 		const float &refl = 0,
 		const float &transp = 0,
-		const Vec3f &ec = 0) :
-		center(c), radius(r), radius2(r*r), diffuseColor(dc), textureColor(tex), emissionColor(ec), transparency(transp), reflection(refl)
+		const Vec3f &ec = 0):
+		center(c), radius(r), radius2(r*r)
 	{
+		diffuseColor = dc;
+		textureColor = tex;
+		emissionColor = ec;
+		transparency = transp;
+		reflection = refl;
 		hasTexture = textureColor != NULL;
 	}
 
-	Vec3f getSurfaceColor(Vec2f uv) const
+	virtual Vec3f getSurfaceColor(Vec2f uv) const override
 	{
 		if (hasTexture)
 			return textureColor(uv);
@@ -39,7 +37,7 @@ public:
 
 	//计算点center到直线raydir的距离d，如果d小于等于radius，那么就相交；
 	//最后要返回是否相交，还要通过引用返回相交点与rayorig的距离(注意rayorig可能在物体内部，也可能在物体外部)
-	bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t)const
+	virtual bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t)const override
 	{
 		Vec3f l = center - rayorig;
 		float projectOflToRaydir = l.dot(raydir);
@@ -56,7 +54,7 @@ public:
 		return true;
 	}
 
-	void getSurfaceData(const Vec3f &raydir, const Vec3f &Phit, Vec3f &Nhit, bool &inside, Vec2f &uv) const
+	virtual void getSurfaceData(const Vec3f &raydir, const Vec3f &Phit, Vec3f &Nhit, bool &inside, Vec2f &uv) const override
 	{
 		Nhit = Phit - center;				//ray击中点的球体外法线
 		Nhit.normalize();
